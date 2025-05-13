@@ -130,10 +130,11 @@ export default function ProfilePage() {
       if (response.ok) {
         const data = await response.json()
         setFamilyCode(data.familyCode)
-        setFamilyMembers(data.members)
+        setFamilyMembers(data.familyMembers || [])
       }
     } catch (error) {
       console.error("Error fetching family data:", error)
+      setFamilyMembers([])
     }
   }
 
@@ -299,7 +300,7 @@ export default function ProfilePage() {
             )}
 
             {/* Family Members List */}
-            {familyMembers.length > 0 && (
+            {familyMembers && familyMembers.length > 0 && (
               <div className="space-y-2">
                 <Label>{t.familyMembers}</Label>
                 <div className="space-y-2">

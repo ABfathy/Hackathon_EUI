@@ -1,92 +1,6 @@
 import { NextResponse } from "next/server"
-import bcrypt from "bcryptjs"
-
-interface User {
-  id: string
-  name: string
-  email: string
-  password: string
-  userType: "parent" | "child" | "independent_child"
-  phoneNumber?: string
-  dateOfBirth?: string
-  familyCode?: string
-  parentEmail?: string
-  parentPhone?: string
-  createdAt: Date
-}
-
-// In-memory storage for users (replace with database in production)
-export let users: User[] = []
-
-// In-memory storage for family codes (replace with database in production)
-export let familyCodes: { [key: string]: string[] } = {}
-
-// Test users data
-const TEST_USERS = [
-  {
-    id: 'test-parent-1',
-    name: 'Test Parent',
-    email: 'test.parent@example.com',
-    password: 'test123',
-    userType: 'parent' as const,
-    phoneNumber: '+1234567890',
-    familyCode: 'TEST123',
-    createdAt: new Date()
-  },
-  {
-    id: 'test-child-1',
-    name: 'Test Child',
-    email: 'test.child@example.com',
-    password: 'test123',
-    userType: 'child' as const,
-    phoneNumber: '+1234567891',
-    dateOfBirth: '2010-01-01',
-    familyCode: 'TEST123',
-    parentEmail: 'test.parent@example.com',
-    parentPhone: '+1234567890',
-    createdAt: new Date()
-  },
-  {
-    id: 'test-independent-1',
-    name: 'Test Independent Child',
-    email: 'test.independent@example.com',
-    password: 'test123',
-    userType: 'independent_child' as const,
-    phoneNumber: '+1234567892',
-    dateOfBirth: '2010-01-01',
-    familyCode: 'IND123',
-    createdAt: new Date()
-  }
-]
-
-// Initialize test users
-async function initializeTestUsers() {
-  if (users.length === 0) {
-    for (const user of TEST_USERS) {
-      // Hash password
-      const hashedPassword = await bcrypt.hash(user.password, 10)
-      
-      // Create user with hashed password
-      const testUser = {
-        ...user,
-        password: hashedPassword
-      }
-      
-      users.push(testUser)
-
-      // Add to family codes
-      if (testUser.familyCode) {
-        if (!familyCodes[testUser.familyCode]) {
-          familyCodes[testUser.familyCode] = []
-        }
-        familyCodes[testUser.familyCode].push(testUser.id)
-      }
-    }
-  }
-}
-
-// Initialize test users when the module loads
-initializeTestUsers()
+import { createUser, getUserByEmail, createFamily } from "@/lib/db-service"
+import { prisma } from "@/lib/db"
 
 // Generate a random family code
 function generateFamilyCode(): string {
@@ -116,7 +30,8 @@ export async function POST(request: Request) {
     }
 
     // Check if user already exists
-    if (users.some(user => user.email === email)) {
+    const existingUser = await getUserByEmail(email)
+    if (existingUser) {
       return NextResponse.json(
         { error: "User already exists" },
         { status: 400 }
@@ -124,13 +39,14 @@ export async function POST(request: Request) {
     }
 
     let familyCode: string | undefined
+    let actualParentEmail: string | undefined = parentEmail // Store the input parentEmail
 
     // Handle family code generation based on user type
-    if (userType === "parent") {
+    if (userType === "PARENT") {
       // Generate new family code for parent
       familyCode = generateFamilyCode()
-      familyCodes[familyCode] = []
-    } else if (userType === "child") {
+      await createFamily(familyCode)
+    } else if (userType === "CHILD") {
       // Validate child registration
       if (!dateOfBirth) {
         return NextResponse.json(
@@ -157,7 +73,7 @@ export async function POST(request: Request) {
         )
       }
 
-      if (!parentEmail || !parentPhone) {
+      if (!actualParentEmail || !parentPhone) {
         return NextResponse.json(
           { error: "Child registration requires parent contact information" },
           { status: 400 }
@@ -165,55 +81,50 @@ export async function POST(request: Request) {
       }
 
       // Validate parent exists
-      const parent = users.find(user => user.email === parentEmail && user.userType === "parent")
-      if (!parent) {
+      const parent = await getUserByEmail(actualParentEmail)
+      if (!parent || parent.userType !== "PARENT") {
         return NextResponse.json(
-          { error: `Parent account with email ${parentEmail} not found. Please make sure the parent account exists and is registered as a parent.` },
+          { error: `Parent account with email ${actualParentEmail} not found. Please make sure the parent account exists and is registered as a parent.` },
           { status: 400 }
         )
       }
+      // Use the canonical email from the parent's record for the foreign key
+      actualParentEmail = parent.email;
 
       // Use parent's family code
-      familyCode = parent.familyCode
+      familyCode = parent.familyCode || undefined
       if (!familyCode) {
         // Generate new family code for parent if they don't have one
         familyCode = generateFamilyCode()
-        parent.familyCode = familyCode
-        familyCodes[familyCode] = [parent.id]
+        await createFamily(familyCode)
+        // Update parent's record with the new family code
+        await prisma.user.update({
+          where: { email: parent.email },
+          data: { familyCode: familyCode },
+        });
       }
-    } else if (userType === "independent_child") {
+    } else if (userType === "INDEPENDENT_CHILD") {
       // Generate new family code for independent child
       familyCode = generateFamilyCode()
-      familyCodes[familyCode] = []
+      await createFamily(familyCode)
     }
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10)
 
     // Create user
-    const user: User = {
-      id: Math.random().toString(36).substring(7),
+    const createUserPayload = {
       name,
       email,
-      password: hashedPassword,
+      password,
       userType,
       phoneNumber,
-      dateOfBirth,
+      dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
       familyCode,
-      parentEmail,
-      parentPhone,
-      createdAt: new Date()
-    }
+      parentEmail: userType === "CHILD" ? actualParentEmail : null,
+      parentPhone: userType === "CHILD" ? parentPhone : null,
+    };
 
-    users.push(user)
+    console.log("REGISTER API: About to call createUser with payload:", JSON.stringify(createUserPayload, null, 2));
 
-    // Add user to family if they have a family code
-    if (familyCode) {
-      if (!familyCodes[familyCode]) {
-        familyCodes[familyCode] = []
-      }
-      familyCodes[familyCode].push(user.id)
-    }
+    const user = await createUser(createUserPayload)
 
     return NextResponse.json({
       message: "User registered successfully",
@@ -247,31 +158,18 @@ export async function DELETE(request: Request) {
       )
     }
 
-    const userIndex = users.findIndex(user => user.email === email)
-    if (userIndex === -1) {
+    const user = await getUserByEmail(email)
+    if (!user) {
       return NextResponse.json(
         { error: "User not found" },
         { status: 404 }
       )
     }
 
-    const user = users[userIndex]
-    
-    // Remove user from family code if they have one
-    if (user.familyCode) {
-      const familyMembers = familyCodes[user.familyCode] || []
-      const updatedMembers = familyMembers.filter(id => id !== user.id)
-      
-      if (updatedMembers.length === 0) {
-        // Delete family code if no members left
-        delete familyCodes[user.familyCode]
-      } else {
-        familyCodes[user.familyCode] = updatedMembers
-      }
-    }
-
-    // Remove user from users array
-    users.splice(userIndex, 1)
+    // Delete user from database
+    await prisma.user.delete({
+      where: { email }
+    })
 
     return NextResponse.json({
       message: "User deleted successfully"

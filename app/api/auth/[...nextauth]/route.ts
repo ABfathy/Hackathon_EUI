@@ -1,11 +1,10 @@
-import NextAuth from "next-auth"
+import NextAuth, { AuthOptions, Session, User } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import bcrypt from "bcryptjs"
+import { getUserByEmail } from "@/lib/db-service"
+import { JWT } from "next-auth/jwt"
 
-// Import the users array from the registration route
-import { users } from "../register/route"
-
-const handler = NextAuth({
+export const authOptions: AuthOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -15,22 +14,30 @@ const handler = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
+          console.log("Missing email or password");
           throw new Error("Invalid credentials")
         }
 
-        // Find user in the users array
-        const user = users.find(user => user.email === credentials.email)
+        // Find user in the database
+        const user = await getUserByEmail(credentials.email)
+        console.log("User found:", user ? "Yes" : "No", user ? `(userType: ${user.userType})` : "");
+        
         if (!user) {
+          console.log("User not found");
           throw new Error("Invalid email or password")
         }
 
         // Verify password
         const isValid = await bcrypt.compare(credentials.password, user.password)
+        console.log("Password valid:", isValid);
+        
         if (!isValid) {
+          console.log("Invalid password");
           throw new Error("Invalid email or password")
         }
 
         // Return user object without password
+        console.log("Authentication successful");
         return {
           id: user.id,
           name: user.name,
@@ -41,7 +48,7 @@ const handler = NextAuth({
     })
   ],
   session: {
-    strategy: "jwt",
+    strategy: "jwt" as const,
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   pages: {
@@ -49,14 +56,14 @@ const handler = NextAuth({
     error: "/login",
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user }: { token: JWT; user?: User }) {
       if (user) {
         token.id = user.id
         token.userType = user.userType
       }
       return token
     },
-    async session({ session, token }) {
+    async session({ session, token }: { session: Session; token: JWT }) {
       if (session.user) {
         session.user.id = token.id as string
         session.user.userType = token.userType as string
@@ -64,6 +71,8 @@ const handler = NextAuth({
       return session
     }
   }
-})
+}
+
+const handler = NextAuth(authOptions)
 
 export { handler as GET, handler as POST } 

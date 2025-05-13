@@ -80,7 +80,7 @@ export default function RegisterPage() {
     email: "",
     password: "",
     confirmPassword: "",
-    userType: "parent",
+    userType: "PARENT",
     phoneNumber: "",
     dateOfBirth: "",
     parentEmail: "",
@@ -138,7 +138,7 @@ export default function RegisterPage() {
       }
 
       // Validate child registration requirements
-      if (formData.userType === "child") {
+      if (formData.userType === "CHILD") {
         if (!formData.parentEmail || !formData.parentPhone || !formData.dateOfBirth) {
           toast({
             title: t.error,
@@ -149,7 +149,7 @@ export default function RegisterPage() {
         }
       }
 
-      const response = await fetch("/api/auth/register", {
+      const response = await fetch("/api/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -173,7 +173,7 @@ export default function RegisterPage() {
       }
 
       // Show success message with family code if it's a parent account
-      if (formData.userType === "parent" && data.user.familyCode) {
+      if (formData.userType === "PARENT" && data.user.familyCode) {
         toast({
           title: t.success,
           description: `Registration successful! Your family code is: ${data.user.familyCode}. Please save this code as you'll need it to connect with your children's accounts.`,
@@ -188,7 +188,7 @@ export default function RegisterPage() {
 
       // Redirect to login page after successful registration
       setTimeout(() => {
-        router.push("/login")
+        router.push("/login?registered=true")
       }, 2000)
     } catch (error) {
       toast({
@@ -288,15 +288,15 @@ export default function RegisterPage() {
                 className="flex flex-col gap-2"
               >
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="parent" id="parent" />
+                  <RadioGroupItem value="PARENT" id="parent" />
                   <Label htmlFor="parent">{t.parent}</Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="child" id="child" />
+                  <RadioGroupItem value="CHILD" id="child" />
                   <Label htmlFor="child">{t.child}</Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="independent_child" id="independent_child" />
+                  <RadioGroupItem value="INDEPENDENT_CHILD" id="independent_child" />
                   <Label htmlFor="independent_child">{t.independentChild}</Label>
                 </div>
               </RadioGroup>
@@ -326,7 +326,7 @@ export default function RegisterPage() {
               />
             </div>
 
-            {formData.userType === "child" && (
+            {formData.userType === "CHILD" && (
               <>
                 <div className="space-y-2">
                   <Label htmlFor="parentEmail">{t.parentEmail}</Label>
