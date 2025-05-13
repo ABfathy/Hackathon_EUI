@@ -6,7 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "ai": "node lib/openai/cli.js",
+    "ai-chat": "node lib/openai/cli.js",
+    "ai-with-key": "node lib/openai/start-ai.js",
+    "ai-wsl": "powershell -ExecutionPolicy Bypass -File ./lib/openai/run-ai.ps1",
+    "ai-bash": "wsl bash -c \"cd $PWD && cd lib/openai && chmod +x run-ai.sh && ./run-ai.sh\"",
+    "test-ai": "node lib/openai/test-api.js"
   },
   "dependencies": {
     "@auth/core": "^0.39.1",
@@ -45,12 +51,14 @@
     "clsx": "^2.1.1",
     "cmdk": "1.0.4",
     "date-fns": "4.1.0",
+    "dotenv": "^16.5.0",
     "embla-carousel-react": "8.5.1",
     "input-otp": "1.4.1",
     "lucide-react": "^0.454.0",
     "next": "15.2.4",
     "next-auth": "^4.24.11",
     "next-themes": "^0.4.4",
+    "openai": "^4.98.0",
     "react": "^19",
     "react-day-picker": "8.10.1",
     "react-dom": "^19",
@@ -70,5 +78,13 @@
     "postcss": "^8",
     "tailwindcss": "^3.4.17",
     "typescript": "^5"
-  }
+  },
+  "description": "This is a Next.js project built with TypeScript, Tailwind CSS, and pnpm. It was bootstrapped using components from v0.dev.",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }

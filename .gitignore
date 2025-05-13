@@ -23,3 +23,5 @@ yarn-error.log*
 *.swp
 
 
+openai-env-template.txt
+lib/openai/run-ai.sh
