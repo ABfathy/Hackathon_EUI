@@ -7,9 +7,10 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Home, BookOpen, AlertTriangle, MapPin, MessageCircle, Wind, Menu, Bot, Globe, LogIn, Moon, Sun, Languages } from "lucide-react"
+import { Home, BookOpen, AlertTriangle, MapPin, MessageCircle, Wind, Menu, Bot, Globe, LogIn, Moon, Sun, Languages, User, LogOut } from "lucide-react"
 import { useLanguage } from "@/context/language-context"
 import { useTheme } from "next-themes"
+import { useSession, signOut } from "next-auth/react"
 
 interface NavItem {
   title: string
@@ -63,11 +64,44 @@ export default function Sidebar() {
   const { language, toggleLanguage } = useLanguage()
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const { data: session } = useSession()
 
   // Only show theme toggle after mounting to prevent hydration mismatch
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  const renderAuthButtons = () => {
+    if (session) {
+      return (
+        <>
+          <Link href="/profile" className="w-full">
+            <Button variant="outline" className="w-full flex items-center gap-2 rounded-xl h-12 text-base border-purple-200 dark:border-gray-700">
+              <User className="h-5 w-5 text-purple-600 dark:text-gray-300" />
+              <span className="truncate">{session.user?.name || session.user?.email}</span>
+            </Button>
+          </Link>
+          <Button
+            variant="outline"
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            className="w-full flex items-center gap-2 rounded-xl h-12 text-base border-purple-200 dark:border-gray-700"
+          >
+            <LogOut className="h-5 w-5 text-purple-600 dark:text-gray-300" />
+            <span className="truncate">{language === "en" ? "Sign Out" : "تسجيل الخروج"}</span>
+          </Button>
+        </>
+      )
+    }
+
+    return (
+      <Link href="/login" className="w-full">
+        <Button variant="outline" className="w-full flex items-center gap-2 rounded-xl h-12 text-base border-purple-200 dark:border-gray-700">
+          <LogIn className="h-5 w-5 text-purple-600 dark:text-gray-300" />
+          <span className="truncate">{language === "en" ? "Login / Register" : "تسجيل الدخول / التسجيل"}</span>
+        </Button>
+      </Link>
+    )
+  }
 
   return (
     <>
@@ -84,11 +118,11 @@ export default function Sidebar() {
           className="p-0 rounded-r-3xl w-[85vw] sm:w-[400px]"
           title={language === "en" ? "Navigation Menu" : "قائمة التنقل"}
         >
-          <div className="space-y-4 py-4">
-            <div className="px-4 py-2">
-              <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
-                <div className="bg-yellow-200 dark:bg-gray-800/50 p-2 rounded-full animate-pulse">
-                  <Wind className="h-5 w-5 text-purple-600 dark:text-gray-300" />
+          <div className="flex h-full flex-col">
+            <div className="p-6">
+              <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
+                <div className="bg-yellow-200 dark:bg-gray-800/50 p-3 rounded-full animate-pulse">
+                  <Wind className="h-6 w-6 text-purple-600 dark:text-gray-300" />
                 </div>
                 {language === "en" ? (
                   <span className="text-purple-600 dark:text-gray-200">Nismah</span>
@@ -97,9 +131,9 @@ export default function Sidebar() {
                 )}
               </h2>
             </div>
-            <div className="px-2">
-              <ScrollArea className="h-[calc(100vh-12rem)]">
-                <div className="space-y-1 p-2">
+            <ScrollArea className="flex-1">
+              <div className="px-4">
+                <div className="space-y-2">
                   {navItems.map((item) => (
                     <Link
                       key={item.href}
@@ -121,15 +155,10 @@ export default function Sidebar() {
                     </Link>
                   ))}
                 </div>
-              </ScrollArea>
-            </div>
+              </div>
+            </ScrollArea>
             <div className="px-4 flex flex-col gap-2">
-              <Link href="/login" className="w-full">
-                <Button variant="outline" className="w-full flex items-center gap-2 rounded-xl h-12 text-base border-purple-200 dark:border-gray-700">
-                  <LogIn className="h-5 w-5 text-purple-600 dark:text-gray-300" />
-                  <span className="truncate">{language === "en" ? "Login / Register" : "تسجيل الدخول / التسجيل"}</span>
-                </Button>
-              </Link>
+              {renderAuthButtons()}
               <Button variant="outline" className="w-full flex items-center gap-2 rounded-xl h-12 text-base border-purple-200 dark:border-gray-700">
                 <Bot className="h-5 w-5 text-purple-600 dark:text-gray-300" />
                 <span className="truncate">{language === "en" ? "AI Assistant" : "المساعد الذكي"}</span>
@@ -197,12 +226,7 @@ export default function Sidebar() {
           </nav>
         </ScrollArea>
         <div className="p-4 space-y-2 border-t border-gray-200 dark:border-gray-700">
-          <Link href="/login" className="w-full">
-            <Button variant="outline" className="w-full flex items-center gap-2 rounded-xl h-12 text-base border-gray-200 dark:border-gray-700">
-              <LogIn className="h-5 w-5 text-gray-700 dark:text-gray-300" />
-              <span>{language === "en" ? "Login / Register" : "تسجيل الدخول / التسجيل"}</span>
-            </Button>
-          </Link>
+          {renderAuthButtons()}
           <Button variant="outline" className="w-full flex items-center gap-2 rounded-xl h-12 text-base border-gray-200 dark:border-gray-700">
             <Bot className="h-5 w-5 text-gray-700 dark:text-gray-300" />
             <span>{language === "en" ? "AI Assistant" : "المساعد الذكي"}</span>
