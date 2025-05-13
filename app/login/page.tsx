@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Wind } from "lucide-react"
 import { useLanguage } from "@/context/language-context"
+import { useUser } from "@/context/user-context"
 import { signIn } from "next-auth/react"
 
 type Language = "en" | "ar"
@@ -41,28 +42,29 @@ const translations = {
     loading: "جاري تسجيل الدخول...",
     testAccounts: "حسابات تجريبية",
     testParent: "تسجيل الدخول كأب تجريبي",
-    testChild: "تسجيل الدخول كطفل تجريبي",
-    testIndependent: "تسجيل الدخول كطفل مستقل تجريبي"
+    testChild: "تسجيل الدخول كطفل تجريبي (7 سنوات)",
+    testIndependent: "تسجيل الدخول كطفل مستقل تجريبي (13 سنة)"
   }
 }
 
-const TEST_USERS = [
+// Define types for test user labels to match UserContext categories
+type TestUserLabel = "testParent" | "testChild" | "testIndependent";
+type UserCategory = "PARENT" | "CHILD_7" | "CHILD_13";
+
+const TEST_USERS_CONFIG: Array<{ label: TestUserLabel; category: UserCategory }> = [
   {
-    email: 'test.parent@example.com',
-    password: 'test123',
-    label: 'testParent'
+    label: 'testParent',
+    category: 'PARENT'
   },
   {
-    email: 'test.child@example.com',
-    password: 'test123',
-    label: 'testChild'
+    label: 'testChild',
+    category: 'CHILD_7' // Will result in age 7
   },
   {
-    email: 'test.independent@example.com',
-    password: 'test123',
-    label: 'testIndependent'
+    label: 'testIndependent',
+    category: 'CHILD_13' // Will result in age 13
   }
-]
+];
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -73,6 +75,7 @@ export default function LoginPage() {
   const searchParams = useSearchParams()
   const { language } = useLanguage()
   const t = translations[language as Language]
+  const { loginAsTestUser } = useUser()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -99,13 +102,9 @@ export default function LoginPage() {
     }
   }
 
-  const handleTestUserLogin = (email: string, password: string) => {
-    setEmail(email)
-    setPassword(password)
-    // Trigger form submission after a short delay to ensure state is updated
-    setTimeout(() => {
-      handleSubmit(new Event('submit') as any)
-    }, 100)
+  // New handler for test user buttons:
+  const handleSimulatedTestLogin = (category: UserCategory) => {
+    loginAsTestUser(category)
   }
 
   return (
@@ -161,15 +160,15 @@ export default function LoginPage() {
                 {t.testAccounts}
               </h3>
               <div className="grid gap-2">
-                {TEST_USERS.map((user) => (
+                {TEST_USERS_CONFIG.map((userConfig) => (
                   <Button
-                    key={user.email}
+                    key={userConfig.label}
                     type="button"
                     variant="outline"
                     className="w-full"
-                    onClick={() => handleTestUserLogin(user.email, user.password)}
+                    onClick={() => handleSimulatedTestLogin(userConfig.category)}
                   >
-                    {t[user.label as keyof typeof t]}
+                    {t[userConfig.label as keyof typeof t]}
                   </Button>
                 ))}
               </div>
