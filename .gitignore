@@ -1,0 +1,25 @@
+# Node modules
+node_modules/
+
+# Output and build
+.next/
+out/
+
+# Logs
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env*
+
+# OS files
+.DS_Store
+
+# IDE settings
+.vscode/
+.idea/
+*.swp
+
+
