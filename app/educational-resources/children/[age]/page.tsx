@@ -3,20 +3,21 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { BookOpen, Play, Award, Volume2, Wind, Users, Baby, School, GraduationCap, Gamepad2, ArrowLeft } from "lucide-react"
+import { BookOpen, Play, Award, Volume2, Wind, Users, Baby, School, GraduationCap, Gamepad2, ArrowLeft, XIcon } from "lucide-react"
 import { useLanguage } from "@/context/language-context"
 import { useParams, useRouter } from "next/navigation"
-import { ReactElement } from "react"
+import { ReactElement, useState } from "react"
 
+type Language = "en" | "ar";
 type AgeGroup = "4-7" | "8-12" | "13-17"
-type Language = "en" | "ar"
 
 interface Activity {
   title: string
   description: string
   icon: ReactElement
   progress: number
-  type: string
+  type: "game" | "story" | "activity" | "lesson" | "video"
+  videoUrl?: string
 }
 
 interface AgeGroupContent {
@@ -27,11 +28,11 @@ interface AgeGroupContent {
 
 type Translations = {
   [L in Language]: {
-    back: string
+    back: string;
   } & {
-    [A in AgeGroup]: AgeGroupContent
-  }
-}
+    [A in AgeGroup]: AgeGroupContent;
+  };
+};
 
 const translations: Translations = {
   en: {
@@ -49,10 +50,11 @@ const translations: Translations = {
         },
         {
           title: "Safe and Unsafe Touch",
-          description: "Interactive story about personal boundaries",
-          icon: <Wind className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
+          description: "Watch a video about personal boundaries and safe touch.",
+          icon: <Play className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
           progress: 0,
-          type: "story"
+          type: "video",
+          videoUrl: "https://www.youtube.com/embed/5Bu2JBDG_Gk"
         },
         {
           title: "Feelings and Emotions",
@@ -133,10 +135,11 @@ const translations: Translations = {
         },
         {
           title: "اللمس الآمن وغير الآمن",
-          description: "قصة تفاعلية عن الحدود الشخصية",
-          icon: <Wind className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
+          description: "شاهد فيديو عن الحدود الشخصية واللمس الآمن.",
+          icon: <Play className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
           progress: 0,
-          type: "story"
+          type: "video",
+          videoUrl: "https://www.youtube.com/embed/5Bu2JBDG_Gk"
         },
         {
           title: "المشاعر والعواطف",
@@ -209,7 +212,8 @@ export default function ChildrenAgeGroupPage() {
   const params = useParams()
   const router = useRouter()
   const ageGroup = params.age as AgeGroup
-  const t = translations[language as Language][ageGroup]
+  const t = translations[language][ageGroup]
+  const [videoUrlToPlay, setVideoUrlToPlay] = useState<string | null>(null);
 
   return (
     <div className="space-y-8">
@@ -220,7 +224,7 @@ export default function ChildrenAgeGroupPage() {
           onClick={() => router.back()}
         >
           <ArrowLeft className="h-4 w-4" />
-          {translations[language as Language].back}
+          {translations[language].back}
         </Button>
       </div>
 
@@ -249,13 +253,52 @@ export default function ChildrenAgeGroupPage() {
               </div>
             </CardContent>
             <CardFooter className="p-6 pt-0">
-              <Button className="w-full bg-purple-600 hover:bg-purple-700 dark:bg-purple-600/80 dark:hover:bg-purple-600 text-white">
-                {activity.progress === 0 ? `Start ${activity.type === "game" ? "Game" : activity.type === "story" ? "Story" : "Activity"}` : "Continue"}
+              <Button 
+                className="w-full bg-purple-600 hover:bg-purple-700 dark:bg-purple-600/80 dark:hover:bg-purple-600 text-white"
+                onClick={() => {
+                  if (activity.type === "video" && activity.videoUrl) {
+                    setVideoUrlToPlay(activity.videoUrl);
+                  } else {
+                    console.log("Button clicked for activity:", activity.title, "Type:", activity.type);
+                  }
+                }}
+              >
+                {activity.type === "video"
+                  ? (language === "en" ? "Watch Video" : "مشاهدة الفيديو")
+                  : activity.progress === 0 
+                    ? (language === "en" ? `Start ${activity.type.charAt(0).toUpperCase() + activity.type.slice(1)}` : `ابدأ ال${activity.type === "game" ? "لعبة" : activity.type === "story" ? "قصة" : "نشاط"}`) 
+                    : (language === "en" ? "Continue" : "متابعة")}
               </Button>
             </CardFooter>
           </Card>
         ))}
       </div>
+
+      {videoUrlToPlay && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
+          <div style={{ backgroundColor: 'white', padding: '10px', borderRadius: '8px', position: 'relative', width: '80vw', maxWidth: '80vw' }}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setVideoUrlToPlay(null)}
+              style={{ position: 'absolute', top: '10px', right: '10px', color: '#333', background: '#fff', borderRadius:'50%', width: '32px', height: '32px' }}
+              aria-label={language === "en" ? "Close video player" : "إغلاق مشغل الفيديو"}
+            >
+              <XIcon className="h-5 w-5" />
+            </Button>
+            <div style={{ aspectRatio: '16/9', width: '100%' }}>
+              <iframe 
+                style={{ width: '100%', height: '100%' }}
+                src={videoUrlToPlay} 
+                title="YouTube video player" 
+                frameBorder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                allowFullScreen>
+              </iframe>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 } 
