@@ -265,6 +265,44 @@ export default function ProfilePage() {
             <h3 className="font-medium">{t.email}</h3>
             <p>{session.user?.email}</p>
           </div>
+          <div>
+            <h3 className="font-medium">{t.familyCode}</h3>
+            {familyCode ? (
+              <div className="flex items-center gap-2">
+                <Input 
+                  value={showFamilyCode ? familyCode : "••••••"} 
+                  readOnly 
+                  className="font-mono"
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setShowFamilyCode(!showFamilyCode)}
+                >
+                  {showFamilyCode ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+                {showFamilyCode && (
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={copyToClipboard}
+                  >
+                    {copied ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <p className="text-muted-foreground">{t.noFamilyCode}</p>
+            )}
+          </div>
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button
@@ -305,44 +343,6 @@ export default function ProfilePage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {session.user?.userType === "parent" && familyCode && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>{t.familyCode}</Label>
-                <div className="flex gap-2">
-                  <Input 
-                    value={showFamilyCode ? familyCode : "••••••"} 
-                    readOnly 
-                  />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setShowFamilyCode(!showFamilyCode)}
-                  >
-                    {showFamilyCode ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </Button>
-                  {showFamilyCode && (
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={copyToClipboard}
-                    >
-                      {copied ? (
-                        <Check className="h-4 w-4" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
           <div className="space-y-2">
             <h3 className="font-medium">{t.familyMembers}</h3>
             {familyMembers.length > 0 ? (

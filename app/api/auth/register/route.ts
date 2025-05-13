@@ -56,8 +56,15 @@ export async function POST(request: Request) {
       )
     }
 
-    // Validate child registration
-    if (userType === "child" || userType === "independent_child") {
+    let familyCode: string | undefined
+
+    // Handle family code generation based on user type
+    if (userType === "parent") {
+      // Generate new family code for parent
+      familyCode = generateFamilyCode()
+      familyCodes[familyCode] = []
+    } else if (userType === "child") {
+      // Validate child registration
       if (!dateOfBirth) {
         return NextResponse.json(
           { error: "Date of birth is required for child accounts" },
@@ -83,45 +90,34 @@ export async function POST(request: Request) {
         )
       }
 
-      // Only validate parent information for non-independent children
-      if (userType === "child") {
-        if (!parentEmail || !parentPhone) {
-          return NextResponse.json(
-            { error: "Child registration requires parent contact information" },
-            { status: 400 }
-          )
-        }
-
-        // Validate parent exists
-        const parent = users.find(user => user.email === parentEmail && user.userType === "parent")
-        if (!parent) {
-          return NextResponse.json(
-            { error: `Parent account with email ${parentEmail} not found. Please make sure the parent account exists and is registered as a parent.` },
-            { status: 400 }
-          )
-        }
-
-        // Use parent's family code
-        if (parent.familyCode) {
-          body.familyCode = parent.familyCode
-        } else {
-          // Generate new family code for parent if they don't have one
-          const newFamilyCode = generateFamilyCode()
-          parent.familyCode = newFamilyCode
-          familyCodes[newFamilyCode] = [parent.id]
-          body.familyCode = newFamilyCode
-        }
-      } else {
-        // Generate new family code for independent child
-        const newFamilyCode = generateFamilyCode()
-        body.familyCode = newFamilyCode
-        familyCodes[newFamilyCode] = []
+      if (!parentEmail || !parentPhone) {
+        return NextResponse.json(
+          { error: "Child registration requires parent contact information" },
+          { status: 400 }
+        )
       }
-    } else if (userType === "parent") {
-      // Generate family code for new parent
-      const newFamilyCode = generateFamilyCode()
-      body.familyCode = newFamilyCode
-      familyCodes[newFamilyCode] = []
+
+      // Validate parent exists
+      const parent = users.find(user => user.email === parentEmail && user.userType === "parent")
+      if (!parent) {
+        return NextResponse.json(
+          { error: `Parent account with email ${parentEmail} not found. Please make sure the parent account exists and is registered as a parent.` },
+          { status: 400 }
+        )
+      }
+
+      // Use parent's family code
+      familyCode = parent.familyCode
+      if (!familyCode) {
+        // Generate new family code for parent if they don't have one
+        familyCode = generateFamilyCode()
+        parent.familyCode = familyCode
+        familyCodes[familyCode] = [parent.id]
+      }
+    } else if (userType === "independent_child") {
+      // Generate new family code for independent child
+      familyCode = generateFamilyCode()
+      familyCodes[familyCode] = []
     }
 
     // Hash password
@@ -136,7 +132,7 @@ export async function POST(request: Request) {
       userType,
       phoneNumber,
       dateOfBirth,
-      familyCode: body.familyCode,
+      familyCode,
       parentEmail,
       parentPhone,
       createdAt: new Date()
@@ -145,11 +141,11 @@ export async function POST(request: Request) {
     users.push(user)
 
     // Add user to family if they have a family code
-    if (user.familyCode) {
-      if (!familyCodes[user.familyCode]) {
-        familyCodes[user.familyCode] = []
+    if (familyCode) {
+      if (!familyCodes[familyCode]) {
+        familyCodes[familyCode] = []
       }
-      familyCodes[user.familyCode].push(user.id)
+      familyCodes[familyCode].push(user.id)
     }
 
     return NextResponse.json({
