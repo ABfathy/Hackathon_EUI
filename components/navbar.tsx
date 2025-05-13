@@ -1,7 +1,7 @@
 "use client"
 
 import { useSession } from "next-auth/react"
-import { useLanguage } from "@/contexts/language-context"
+import { useLanguage } from "@/context/language-context"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { signOut } from "next-auth/react"
