@@ -1,309 +1,337 @@
-// Update the educational resources page to use the language context
 "use client"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
-import { BookOpen, Play, Award, VolumeX, Volume2, Sparkles } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { BookOpen, Play, Award, VolumeX, Volume2, Sparkles, Shield, Users, Baby, School, GraduationCap } from "lucide-react"
 import { useLanguage } from "@/context/language-context"
+import Link from "next/link"
+
+const translations = {
+  en: {
+    title: "Educational Resources",
+    description: "Access fun, age-appropriate courses and interactive lessons for both parents and children.",
+    startLearning: "Start Learning",
+    tabs: {
+      parents: "For Parents",
+      children: "For Children"
+    },
+    ageGroups: {
+      parents: {
+        title: "Parent Resources by Child's Age",
+        description: "Select your child's age group to access relevant resources",
+        groups: [
+          {
+            title: "Infants & Toddlers (0-3)",
+            description: "Early development and safety basics",
+            icon: <Baby className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
+            href: "/educational-resources/parents/0-3"
+          },
+          {
+            title: "Preschool (4-6)",
+            description: "Building trust and communication",
+            icon: <School className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
+            href: "/educational-resources/parents/4-6"
+          },
+          {
+            title: "School Age (7-12)",
+            description: "Digital safety and peer relationships",
+            icon: <GraduationCap className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
+            href: "/educational-resources/parents/7-12"
+          },
+          {
+            title: "Teens (13-17)",
+            description: "Independence and online safety",
+            icon: <Users className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
+            href: "/educational-resources/parents/13-17"
+          }
+        ]
+      },
+      children: {
+        title: "Interactive Learning by Age",
+        description: "Select your age group to start learning",
+        groups: [
+          {
+            title: "Ages 4-7",
+            description: "Fun games about body safety",
+            icon: <Baby className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
+            href: "/educational-resources/children/4-7"
+          },
+          {
+            title: "Ages 8-12",
+            description: "Interactive lessons about boundaries",
+            icon: <School className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
+            href: "/educational-resources/children/8-12"
+          },
+          {
+            title: "Ages 13-17",
+            description: "Digital safety and relationships",
+            icon: <GraduationCap className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
+            href: "/educational-resources/children/13-17"
+          }
+        ]
+      }
+    },
+    featured: {
+      title: "Featured Courses",
+      description: "Most popular courses this month",
+      items: [
+        {
+          title: "Parenting Certificate Program",
+          description: "Complete all courses to earn a certificate",
+          icon: <Award className="h-5 w-5 text-purple-600 dark:text-gray-300" />
+        }
+      ]
+    },
+    recommended: {
+      title: "Recommended for You",
+      description: "Based on your learning progress",
+      items: [
+        {
+          title: "Voice Guidance",
+          description: "Enable voice narration for lessons",
+          icon: <Volume2 className="h-5 w-5 text-purple-600 dark:text-gray-300" />
+        }
+      ]
+    },
+    progress: {
+      title: "Your Progress",
+      description: "Track your learning journey",
+      items: [
+        {
+          title: "Overall Progress",
+          progress: 45
+        }
+      ]
+    }
+  },
+  ar: {
+    title: "الموارد التعليمية",
+    description: "الوصول إلى دورات ممتعة ودروس تفاعلية مناسبة للعمر لكل من الآباء والأطفال.",
+    startLearning: "ابدأ التعلم",
+    tabs: {
+      parents: "للآباء",
+      children: "للأطفال"
+    },
+    ageGroups: {
+      parents: {
+        title: "موارد الوالدين حسب عمر الطفل",
+        description: "اختر الفئة العمرية لطفلك للوصول إلى الموارد ذات الصلة",
+        groups: [
+          {
+            title: "الرضع والأطفال الصغار (0-3)",
+            description: "التنمية المبكرة وأساسيات السلامة",
+            icon: <Baby className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
+            href: "/educational-resources/parents/0-3"
+          },
+          {
+            title: "ما قبل المدرسة (4-6)",
+            description: "بناء الثقة والتواصل",
+            icon: <School className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
+            href: "/educational-resources/parents/4-6"
+          },
+          {
+            title: "سن المدرسة (7-12)",
+            description: "السلامة الرقمية وعلاقات الأقران",
+            icon: <GraduationCap className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
+            href: "/educational-resources/parents/7-12"
+          },
+          {
+            title: "المراهقون (13-17)",
+            description: "الاستقلالية والسلامة عبر الإنترنت",
+            icon: <Users className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
+            href: "/educational-resources/parents/13-17"
+          }
+        ]
+      },
+      children: {
+        title: "التعلم التفاعلي حسب العمر",
+        description: "اختر فئتك العمرية لبدء التعلم",
+        groups: [
+          {
+            title: "الأعمار 4-7",
+            description: "ألعاب ممتعة عن سلامة الجسد",
+            icon: <Baby className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
+            href: "/educational-resources/children/4-7"
+          },
+          {
+            title: "الأعمار 8-12",
+            description: "دروس تفاعلية عن الحدود",
+            icon: <School className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
+            href: "/educational-resources/children/8-12"
+          },
+          {
+            title: "الأعمار 13-17",
+            description: "السلامة الرقمية والعلاقات",
+            icon: <GraduationCap className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
+            href: "/educational-resources/children/13-17"
+          }
+        ]
+      }
+    },
+    featured: {
+      title: "الدورات المميزة",
+      description: "الدورات الأكثر شعبية هذا الشهر",
+      items: [
+        {
+          title: "برنامج شهادة الأبوة والأمومة",
+          description: "أكمل جميع الدورات للحصول على شهادة",
+          icon: <Award className="h-5 w-5 text-purple-600 dark:text-gray-300" />
+        }
+      ]
+    },
+    recommended: {
+      title: "موصى به لك",
+      description: "بناءً على تقدمك في التعلم",
+      items: [
+        {
+          title: "التوجيه الصوتي",
+          description: "تمكين السرد الصوتي للدروس",
+          icon: <Volume2 className="h-5 w-5 text-purple-600 dark:text-gray-300" />
+        }
+      ]
+    },
+    progress: {
+      title: "تقدمك",
+      description: "تتبع رحلة تعلمك",
+      items: [
+        {
+          title: "التقدم العام",
+          progress: 45
+        }
+      ]
+    }
+  }
+}
 
 export default function EducationalResourcesPage() {
   const { language } = useLanguage()
+  const t = translations[language]
 
   return (
-    <div className="container mx-auto space-y-8 max-w-6xl">
-      <div className="flex flex-col space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-          <div className="bg-yellow-200 dark:bg-yellow-900 p-2 rounded-full animate-bounce-slow">
-            <BookOpen className="h-6 w-6 text-purple-600" />
-          </div>
-          <span>{language === "en" ? "Educational Resources" : "الموارد التعليمية"}</span>
-        </h1>
-        <p className="text-muted-foreground">
-          {language === "en"
-            ? "Access fun, age-appropriate courses and interactive lessons for both parents and children."
-            : "الوصول إلى دورات ممتعة ودروس تفاعلية مناسبة للعمر لكل من الآباء والأطفال."}
-        </p>
-      </div>
-
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Label htmlFor="voice-guidance" className="flex items-center gap-2">
-            <Volume2 className="h-4 w-4" />
-            {language === "en" ? "Voice Guidance" : "التوجيه الصوتي"}
-          </Label>
-          <Switch id="voice-guidance" />
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">
-            {language === "en" ? "Overall Progress:" : "التقدم العام:"}
-          </span>
-          <Progress value={45} className="w-[200px]" />
-          <span className="text-sm font-medium">45%</span>
-        </div>
+    <div className="space-y-8">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">{t.title}</h1>
+        <p className="text-muted-foreground">{t.description}</p>
       </div>
 
       <Tabs defaultValue="parents" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 rounded-xl p-1">
-          <TabsTrigger
-            value="parents"
-            className="rounded-lg data-[state=active]:bg-purple-100 data-[state=active]:text-purple-600"
-          >
-            {language === "en" ? "For Parents" : "للآباء"}
-          </TabsTrigger>
-          <TabsTrigger
-            value="children"
-            className="rounded-lg data-[state=active]:bg-blue-100 data-[state=active]:text-blue-600"
-          >
-            {language === "en" ? "For Children" : "للأطفال"}
-          </TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="parents">{t.tabs.parents}</TabsTrigger>
+          <TabsTrigger value="children">{t.tabs.children}</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="parents" className="space-y-6 pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Course 1 */}
-            <Card className="rounded-2xl hover:shadow-md transition-all">
-              <CardHeader className="space-y-1">
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-lg">
-                    {language === "en" ? "Recognizing Signs of Abuse" : "التعرف على علامات الإساءة"}
-                  </CardTitle>
-                  <div className="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded-full">
-                    {language === "en" ? "Beginner" : "مبتدئ"}
-                  </div>
-                </div>
-                <CardDescription>
-                  {language === "en"
-                    ? "Learn to identify warning signs and behavioral changes"
-                    : "تعلم تحديد علامات التحذير والتغيرات السلوكية"}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>{language === "en" ? "Progress" : "التقدم"}</span>
-                    <span className="font-medium">60%</span>
-                  </div>
-                  <Progress value={60} />
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button className="w-full flex items-center gap-2 rounded-xl">
-                  <Play className="h-4 w-4" />
-                  {language === "en" ? "Continue Learning" : "متابعة التعلم"}
-                </Button>
-              </CardFooter>
-            </Card>
-
-            {/* Course 2 */}
-            <Card className="rounded-2xl hover:shadow-md transition-all">
-              <CardHeader className="space-y-1">
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-lg">
-                    {language === "en" ? "Setting Healthy Boundaries" : "وضع حدود صحية"}
-                  </CardTitle>
-                  <div className="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded-full">
-                    {language === "en" ? "Intermediate" : "متوسط"}
-                  </div>
-                </div>
-                <CardDescription>
-                  {language === "en"
-                    ? "Teaching children about personal boundaries and consent"
-                    : "تعليم الأطفال عن الحدود الشخصية والموافقة"}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>{language === "en" ? "Progress" : "التقدم"}</span>
-                    <span className="font-medium">30%</span>
-                  </div>
-                  <Progress value={30} />
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button className="w-full flex items-center gap-2 rounded-xl">
-                  <Play className="h-4 w-4" />
-                  {language === "en" ? "Continue Learning" : "متابعة التعلم"}
-                </Button>
-              </CardFooter>
-            </Card>
-
-            {/* Course 3 */}
-            <Card className="rounded-2xl hover:shadow-md transition-all">
-              <CardHeader className="space-y-1">
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-lg">
-                    {language === "en" ? "Responding to Disclosures" : "الاستجابة للإفصاحات"}
-                  </CardTitle>
-                  <div className="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded-full">
-                    {language === "en" ? "Advanced" : "متقدم"}
-                  </div>
-                </div>
-                <CardDescription>
-                  {language === "en"
-                    ? "How to respond when a child discloses abuse"
-                    : "كيفية الاستجابة عندما يفصح طفل عن الإساءة"}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>{language === "en" ? "Progress" : "التقدم"}</span>
-                    <span className="font-medium">0%</span>
-                  </div>
-                  <Progress value={0} />
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button variant="outline" className="w-full flex items-center gap-2 rounded-xl">
-                  <Play className="h-4 w-4" />
-                  {language === "en" ? "Start Course" : "بدء الدورة"}
-                </Button>
-              </CardFooter>
-            </Card>
+        <TabsContent value="parents" className="space-y-6">
+          <div className="space-y-4">
+            <h2 className="text-2xl font-semibold">{t.ageGroups.parents.title}</h2>
+            <p className="text-muted-foreground">{t.ageGroups.parents.description}</p>
           </div>
-
-          <Card className="bg-emerald-50 dark:bg-emerald-950 border-emerald-200 dark:border-emerald-800 rounded-2xl">
-            <CardContent className="p-6 flex flex-col md:flex-row items-center gap-6">
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-full">
-                <Award className="h-10 w-10 text-emerald-600" />
-              </div>
-              <div className="flex-1 space-y-2 text-center md:text-left">
-                <h3 className="text-xl font-semibold">
-                  {language === "en" ? "Parenting Certificate Program" : "برنامج شهادة الأبوة والأمومة"}
-                </h3>
-                <p className="text-muted-foreground">
-                  {language === "en"
-                    ? "Complete all courses to earn a certificate in child protection and safety."
-                    : "أكمل جميع الدورات للحصول على شهادة في حماية الطفل والسلامة."}
-                </p>
-              </div>
-              <Button variant="outline" className="border-emerald-600 text-emerald-600 hover:bg-emerald-50 rounded-xl">
-                {language === "en" ? "View Certificate Progress" : "عرض تقدم الشهادة"}
-              </Button>
-            </CardContent>
-          </Card>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {t.ageGroups.parents.groups.map((group, index) => (
+              <Link key={index} href={group.href}>
+                <Card className="h-full hover:border-purple-300 dark:hover:border-gray-600 transition-colors">
+                  <CardHeader>
+                    <div className="bg-purple-100 dark:bg-gray-800/50 p-2 rounded-full w-fit">
+                      {group.icon}
+                    </div>
+                    <CardTitle className="mt-4">{group.title}</CardTitle>
+                    <CardDescription>{group.description}</CardDescription>
+                  </CardHeader>
+                </Card>
+              </Link>
+            ))}
+          </div>
         </TabsContent>
 
-        <TabsContent value="children" className="space-y-6 pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Interactive Lesson 1 */}
-            <Card className="rounded-2xl hover:shadow-md transition-all">
-              <CardHeader className="space-y-1">
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-lg">
-                    {language === "en" ? "My Body Belongs to Me" : "جسدي ملك لي"}
-                  </CardTitle>
-                  <div className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">
-                    {language === "en" ? "Ages 4-7" : "الأعمار 4-7"}
-                  </div>
-                </div>
-                <CardDescription>
-                  {language === "en" ? "Interactive game teaching body autonomy" : "لعبة تفاعلية تعلم استقلالية الجسد"}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="aspect-video bg-gray-100 dark:bg-gray-800 rounded-md flex items-center justify-center">
-                  <BookOpen className="h-10 w-10 text-muted-foreground" />
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button className="w-full flex items-center gap-2 rounded-xl">
-                  <Play className="h-4 w-4" />
-                  {language === "en" ? "Play Game" : "العب اللعبة"}
-                </Button>
-              </CardFooter>
-            </Card>
-
-            {/* Interactive Lesson 2 */}
-            <Card className="rounded-2xl hover:shadow-md transition-all">
-              <CardHeader className="space-y-1">
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-lg">
-                    {language === "en" ? "Safe and Unsafe Secrets" : "الأسرار الآمنة وغير الآمنة"}
-                  </CardTitle>
-                  <div className="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded-full">
-                    {language === "en" ? "Ages 8-12" : "الأعمار 8-12"}
-                  </div>
-                </div>
-                <CardDescription>
-                  {language === "en" ? "Learn which secrets are okay to keep" : "تعلم أي الأسرار يمكن الاحتفاظ بها"}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="aspect-video bg-gray-100 dark:bg-gray-800 rounded-md flex items-center justify-center">
-                  <BookOpen className="h-10 w-10 text-muted-foreground" />
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button className="w-full flex items-center gap-2 rounded-xl">
-                  <Play className="h-4 w-4" />
-                  {language === "en" ? "Start Activity" : "بدء النشاط"}
-                </Button>
-              </CardFooter>
-            </Card>
-
-            {/* Interactive Lesson 3 */}
-            <Card className="rounded-2xl hover:shadow-md transition-all">
-              <CardHeader className="space-y-1">
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-lg">{language === "en" ? "Digital Safety" : "السلامة الرقمية"}</CardTitle>
-                  <div className="bg-orange-100 text-orange-700 text-xs px-2 py-1 rounded-full">
-                    {language === "en" ? "Ages 13-17" : "الأعمار 13-17"}
-                  </div>
-                </div>
-                <CardDescription>
-                  {language === "en"
-                    ? "Staying safe online and recognizing digital risks"
-                    : "البقاء آمنًا عبر الإنترنت والتعرف على المخاطر الرقمية"}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="aspect-video bg-gray-100 dark:bg-gray-800 rounded-md flex items-center justify-center">
-                  <BookOpen className="h-10 w-10 text-muted-foreground" />
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button className="w-full flex items-center gap-2 rounded-xl">
-                  <Play className="h-4 w-4" />
-                  {language === "en" ? "Start Module" : "بدء الوحدة"}
-                </Button>
-              </CardFooter>
-            </Card>
+        <TabsContent value="children" className="space-y-6">
+          <div className="space-y-4">
+            <h2 className="text-2xl font-semibold">{t.ageGroups.children.title}</h2>
+            <p className="text-muted-foreground">{t.ageGroups.children.description}</p>
           </div>
-
-          <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 border-2 border-dashed border-blue-200 dark:border-blue-800 rounded-[40px] shadow-xl">
-            <CardContent className="p-6 flex flex-col md:flex-row items-center gap-6">
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-full shadow-md animate-bounce-medium">
-                <Volume2 className="h-10 w-10 text-blue-600" />
-              </div>
-              <div className="flex-1 space-y-2 text-center md:text-left">
-                <h3 className="text-xl font-semibold flex items-center gap-2">
-                  {language === "en" ? "Voice Guidance for Young Learners" : "التوجيه الصوتي للمتعلمين الصغار"}
-                  <Sparkles className="h-5 w-5 text-yellow-500" />
-                </h3>
-                <p className="text-muted-foreground">
-                  {language === "en"
-                    ? "Enable voice narration to help younger children navigate through lessons."
-                    : "تمكين السرد الصوتي لمساعدة الأطفال الأصغر سنًا على التنقل عبر الدروس."}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" className="rounded-full h-12 w-12">
-                  <VolumeX className="h-5 w-5" />
-                </Button>
-                <Button variant="outline" size="icon" className="rounded-full h-12 w-12">
-                  <Volume2 className="h-5 w-5" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {t.ageGroups.children.groups.map((group, index) => (
+              <Link key={index} href={group.href}>
+                <Card className="h-full hover:border-purple-300 dark:hover:border-gray-600 transition-colors">
+                  <CardHeader>
+                    <div className="bg-purple-100 dark:bg-gray-800/50 p-2 rounded-full w-fit">
+                      {group.icon}
+                    </div>
+                    <CardTitle className="mt-4">{group.title}</CardTitle>
+                    <CardDescription>{group.description}</CardDescription>
+                  </CardHeader>
+                </Card>
+              </Link>
+            ))}
+          </div>
         </TabsContent>
       </Tabs>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card className="border-purple-200 dark:border-gray-700">
+          <CardHeader>
+            <CardTitle className="text-gray-900 dark:text-gray-100">{t.featured.title}</CardTitle>
+            <CardDescription className="dark:text-gray-400">{t.featured.description}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {t.featured.items.map((item, index) => (
+                <div key={index} className="flex items-start gap-4">
+                  <div className="bg-purple-100 dark:bg-gray-800/50 p-2 rounded-full">
+                    {item.icon}
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-900 dark:text-gray-100">{item.title}</h4>
+                    <p className="text-sm text-muted-foreground dark:text-gray-400">{item.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-purple-200 dark:border-gray-700">
+          <CardHeader>
+            <CardTitle className="text-gray-900 dark:text-gray-100">{t.recommended.title}</CardTitle>
+            <CardDescription className="dark:text-gray-400">{t.recommended.description}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {t.recommended.items.map((item, index) => (
+                <div key={index} className="flex items-start gap-4">
+                  <div className="bg-purple-100 dark:bg-gray-800/50 p-2 rounded-full">
+                    {item.icon}
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-900 dark:text-gray-100">{item.title}</h4>
+                    <p className="text-sm text-muted-foreground dark:text-gray-400">{item.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="border-purple-200 dark:border-gray-700">
+        <CardHeader>
+          <CardTitle className="text-gray-900 dark:text-gray-100">{t.progress.title}</CardTitle>
+          <CardDescription className="dark:text-gray-400">{t.progress.description}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {t.progress.items.map((item, index) => (
+              <div key={index} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{item.title}</span>
+                  <span className="text-sm text-muted-foreground dark:text-gray-400">{item.progress}%</span>
+                </div>
+                <Progress value={item.progress} className="h-2 bg-gray-100 dark:bg-gray-800" />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

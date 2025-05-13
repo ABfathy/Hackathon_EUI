@@ -82,8 +82,60 @@
   border-radius: 30px;
 }
 
-.shadow-playful {
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+/* Dark mode transitions */
+* {
+  @apply transition-colors duration-200;
+}
+
+/* Dark mode specific styles */
+.dark {
+  .bg-gradient-to-br {
+    @apply from-gray-950 to-purple-950;
+  }
+  
+  .border-purple-200 {
+    @apply border-purple-800;
+  }
+  
+  .hover\:bg-purple-50:hover {
+    @apply hover:bg-purple-950;
+  }
+  
+  .bg-white {
+    @apply bg-gray-800;
+  }
+  
+  .text-muted-foreground {
+    @apply text-gray-400;
+  }
+  
+  .bg-yellow-200 {
+    @apply bg-yellow-900;
+  }
+  
+  .text-purple-600 {
+    @apply text-purple-400;
+  }
+  
+  .text-emerald-600 {
+    @apply text-emerald-400;
+  }
+  
+  .border-dashed {
+    @apply border-purple-800;
+  }
+  
+  .hover\:border-purple-200:hover {
+    @apply hover:border-purple-800;
+  }
+  
+  .bg-gradient-to-r {
+    @apply from-purple-950 to-emerald-950;
+  }
+  
+  .hover\:text-purple-600:hover {
+    @apply hover:text-purple-400;
+  }
 }
 
 /* RTL Support */

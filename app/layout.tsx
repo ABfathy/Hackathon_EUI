@@ -4,6 +4,7 @@ import { Comfortaa } from "next/font/google"
 import "./globals.css"
 import Sidebar from "@/components/sidebar"
 import { Providers } from "./providers"
+import { Toaster } from "@/components/ui/toaster"
 
 const comfortaa = Comfortaa({ subsets: ["latin"] })
 
@@ -26,6 +27,7 @@ export default function RootLayout({
             <Sidebar />
             <main className="flex-1 p-6 md:p-8 overflow-y-auto">{children}</main>
           </div>
+          <Toaster />
         </Providers>
       </body>
     </html>
