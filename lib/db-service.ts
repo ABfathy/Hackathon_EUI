@@ -56,6 +56,8 @@ export const createUser = async (userData: any) => {
     dataToCreate.parentPhone = null;
   }
 
+  // Print the userType to verify it's being passed correctly
+  console.log("DB-SERVICE: Processing userType:", userData.userType, "passed to Prisma as:", dataToCreate.userType);
   console.log("DB-SERVICE: About to call prisma.user.create with data (after cleanup):", JSON.stringify(dataToCreate, null, 2));
 
   return prisma.user.create({

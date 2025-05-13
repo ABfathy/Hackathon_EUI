@@ -196,6 +196,19 @@ export default function RegisterPage() {
         description: error instanceof Error ? error.message : "Registration failed",
         variant: "destructive"
       })
+      
+      // Log more details about the error to help with troubleshooting
+      console.error("Registration error details:", error);
+      
+      // If the error contains a specific message about parent not found, provide clearer guidance
+      if (error instanceof Error && error.message.includes("Parent account")) {
+        toast({
+          title: t.error,
+          description: "The parent email you provided is not registered as a parent account. Please ensure the parent registers first.",
+          variant: "destructive",
+          duration: 6000
+        });
+      }
     } finally {
       setIsLoading(false)
     }

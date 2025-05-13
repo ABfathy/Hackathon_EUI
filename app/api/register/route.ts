@@ -12,10 +12,12 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { name, email, password, userType: rawUserType, phoneNumber, dateOfBirth, parentEmail, parentPhone } = body
     
-    // Normalize userType to match Prisma enum
-    const userType = rawUserType === 'parent' ? 'PARENT' : 
-                      rawUserType === 'child' ? 'CHILD' : 
+    // Normalize userType to match Prisma enum, handling both uppercase and lowercase
+    const userType = rawUserType.toUpperCase() === 'PARENT' ? 'PARENT' : 
+                      rawUserType.toUpperCase() === 'CHILD' ? 'CHILD' : 
                       'INDEPENDENT_CHILD'
+    
+    console.log("REGISTER API: Processing registration for userType:", rawUserType, "normalized to:", userType);
 
     // Validate required fields
     if (!name || !email || !password || !userType) {
@@ -86,6 +88,13 @@ export async function POST(request: Request) {
 
       // Validate parent exists
       const parent = await getUserByEmail(parentEmail)
+      console.log("REGISTER API: Parent lookup for CHILD registration:", { 
+        parentEmailLookedUp: parentEmail, 
+        parentFound: !!parent, 
+        parentType: parent?.userType,
+        isParentTypeMatch: parent?.userType === "PARENT"
+      });
+      
       if (!parent || parent.userType !== "PARENT") {
         return NextResponse.json(
           { error: `Parent account with email ${parentEmail} not found. Please make sure the parent account exists and is registered as a parent.` },
@@ -106,8 +115,8 @@ export async function POST(request: Request) {
       await createFamily(familyCode)
     }
 
-    // Create user
-    const user = await createUser({
+    // Create user with appropriate properties based on userType
+    const createUserPayload = {
       name,
       email,
       password,
@@ -115,9 +124,22 @@ export async function POST(request: Request) {
       phoneNumber,
       dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
       familyCode,
-      parentEmail,
-      parentPhone,
-    })
+      // Only include parent info for CHILD users
+      ...(userType === "CHILD" ? {
+        parentEmail,
+        parentPhone,
+      } : {
+        parentEmail: null,
+        parentPhone: null,
+      })
+    };
+
+    console.log("REGISTER API: Final createUser payload:", JSON.stringify({
+      ...createUserPayload,
+      password: "[REDACTED]" // Don't log the actual password
+    }, null, 2));
+
+    const user = await createUser(createUserPayload)
 
     return NextResponse.json({
       message: "User registered successfully",

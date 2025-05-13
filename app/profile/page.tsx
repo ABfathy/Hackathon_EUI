@@ -280,7 +280,7 @@ export default function ProfilePage() {
             </div>
 
             {/* Join Family Section - Only for independent children */}
-            {!familyCode && userType === "independent_child" && (
+            {!familyCode && userType && userType.toUpperCase() === "INDEPENDENT_CHILD" && (
               <div className="space-y-2">
                 <Label>{t.joinFamily}</Label>
                 <div className="flex gap-2">
@@ -312,7 +312,7 @@ export default function ProfilePage() {
                       <Users className="h-4 w-4" />
                       <span>{member.name}</span>
                       <span className="text-sm text-muted-foreground">
-                        ({member.userType === "parent" ? t.parent : t.child})
+                        ({member.userType && member.userType.toUpperCase() === "PARENT" ? t.parent : t.child})
                       </span>
                     </div>
                   ))}
