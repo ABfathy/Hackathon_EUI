@@ -212,10 +212,13 @@ export default function ProfilePage() {
   const handleSignOut = async () => {
     try {
       setIsSigningOut(true)
+      
+      // Just sign out without deleting data
       await signOut({ 
         callbackUrl: "/login",
         redirect: true
       })
+      
       toast({
         title: t.signOutSuccess,
         duration: 3000

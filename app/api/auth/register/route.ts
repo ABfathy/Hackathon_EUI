@@ -6,7 +6,7 @@ interface User {
   name: string
   email: string
   password: string
-  userType: "parent" | "child"
+  userType: "parent" | "child" | "independent_child"
   phoneNumber?: string
   dateOfBirth?: string
   familyCode?: string
@@ -29,7 +29,7 @@ function generateFamilyCode(): string {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { name, email, password, userType, phoneNumber, dateOfBirth, familyCode, parentEmail, parentPhone } = body
+    const { name, email, password, userType, phoneNumber, dateOfBirth, parentEmail, parentPhone } = body
 
     // Validate required fields
     if (!name || !email || !password || !userType) {
@@ -57,10 +57,10 @@ export async function POST(request: Request) {
     }
 
     // Validate child registration
-    if (userType === "child") {
-      if (!dateOfBirth || !parentEmail || !parentPhone) {
+    if (userType === "child" || userType === "independent_child") {
+      if (!dateOfBirth) {
         return NextResponse.json(
-          { error: "Child registration requires date of birth and parent contact information" },
+          { error: "Date of birth is required for child accounts" },
           { status: 400 }
         )
       }
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
       // Calculate age
       const birthDate = new Date(dateOfBirth)
       const today = new Date()
-      const age = today.getFullYear() - birthDate.getFullYear()
+      let age = today.getFullYear() - birthDate.getFullYear()
       const monthDiff = today.getMonth() - birthDate.getMonth()
       
       if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
@@ -83,24 +83,39 @@ export async function POST(request: Request) {
         )
       }
 
-      // Validate parent exists
-      const parent = users.find(user => user.email === parentEmail && user.userType === "parent")
-      if (!parent) {
-        return NextResponse.json(
-          { error: "Parent account not found" },
-          { status: 400 }
-        )
-      }
+      // Only validate parent information for non-independent children
+      if (userType === "child") {
+        if (!parentEmail || !parentPhone) {
+          return NextResponse.json(
+            { error: "Child registration requires parent contact information" },
+            { status: 400 }
+          )
+        }
 
-      // Use parent's family code
-      if (parent.familyCode) {
-        body.familyCode = parent.familyCode
+        // Validate parent exists
+        const parent = users.find(user => user.email === parentEmail && user.userType === "parent")
+        if (!parent) {
+          return NextResponse.json(
+            { error: `Parent account with email ${parentEmail} not found. Please make sure the parent account exists and is registered as a parent.` },
+            { status: 400 }
+          )
+        }
+
+        // Use parent's family code
+        if (parent.familyCode) {
+          body.familyCode = parent.familyCode
+        } else {
+          // Generate new family code for parent if they don't have one
+          const newFamilyCode = generateFamilyCode()
+          parent.familyCode = newFamilyCode
+          familyCodes[newFamilyCode] = [parent.id]
+          body.familyCode = newFamilyCode
+        }
       } else {
-        // Generate new family code for parent if they don't have one
+        // Generate new family code for independent child
         const newFamilyCode = generateFamilyCode()
-        parent.familyCode = newFamilyCode
-        familyCodes[newFamilyCode] = [parent.id]
         body.familyCode = newFamilyCode
+        familyCodes[newFamilyCode] = []
       }
     } else if (userType === "parent") {
       // Generate family code for new parent
@@ -149,6 +164,57 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     console.error("Registration error:", error)
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    )
+  }
+}
+
+// DELETE /api/auth/register - Delete user
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const email = searchParams.get('email')
+
+    if (!email) {
+      return NextResponse.json(
+        { error: "Email is required" },
+        { status: 400 }
+      )
+    }
+
+    const userIndex = users.findIndex(user => user.email === email)
+    if (userIndex === -1) {
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      )
+    }
+
+    const user = users[userIndex]
+    
+    // Remove user from family code if they have one
+    if (user.familyCode) {
+      const familyMembers = familyCodes[user.familyCode] || []
+      const updatedMembers = familyMembers.filter(id => id !== user.id)
+      
+      if (updatedMembers.length === 0) {
+        // Delete family code if no members left
+        delete familyCodes[user.familyCode]
+      } else {
+        familyCodes[user.familyCode] = updatedMembers
+      }
+    }
+
+    // Remove user from users array
+    users.splice(userIndex, 1)
+
+    return NextResponse.json({
+      message: "User deleted successfully"
+    })
+  } catch (error) {
+    console.error("Delete user error:", error)
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

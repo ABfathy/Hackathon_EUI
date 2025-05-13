@@ -10,84 +10,145 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Wind } from "lucide-react"
 import { useLanguage } from "@/context/language-context"
+import { useToast } from "@/components/ui/use-toast"
+
+const translations = {
+  en: {
+    title: "Create an Account",
+    subtitle: "Join Nismah to protect and support children",
+    name: "Name",
+    email: "Email",
+    password: "Password",
+    confirmPassword: "Confirm Password",
+    userType: "I am a",
+    parent: "Parent/Guardian",
+    child: "Child",
+    phoneNumber: "Phone Number",
+    dateOfBirth: "Date of Birth",
+    parentEmail: "Parent/Guardian Email",
+    parentPhone: "Parent/Guardian Phone",
+    register: "Register",
+    login: "Already have an account? Sign in",
+    error: "Error",
+    success: "Success",
+    registrationSuccess: "Registration successful! Redirecting to login...",
+    passwordsDontMatch: "Passwords don't match",
+    invalidEmail: "Invalid email format",
+    invalidPhone: "Invalid phone number format",
+    required: "This field is required",
+    invalidDate: "Invalid date format (YYYY-MM-DD)",
+    childRequirements: "Child registration requires parent information",
+    independentChild: "Independent Child"
+  },
+  ar: {
+    title: "إنشاء حساب",
+    subtitle: "انضم إلى نِسمة لحماية ودعم الأطفال",
+    name: "الاسم",
+    email: "البريد الإلكتروني",
+    password: "كلمة المرور",
+    confirmPassword: "تأكيد كلمة المرور",
+    userType: "أنا",
+    parent: "الوالد/الوصي",
+    child: "الطفل",
+    phoneNumber: "رقم الهاتف",
+    dateOfBirth: "تاريخ الميلاد",
+    parentEmail: "بريد الوالد/الوصي الإلكتروني",
+    parentPhone: "رقم هاتف الوالد/الوصي",
+    register: "تسجيل",
+    login: "لديك حساب بالفعل؟ تسجيل الدخول",
+    error: "خطأ",
+    success: "نجاح",
+    registrationSuccess: "تم التسجيل بنجاح! جاري التوجيه إلى صفحة تسجيل الدخول...",
+    passwordsDontMatch: "كلمات المرور غير متطابقة",
+    invalidEmail: "صيغة البريد الإلكتروني غير صالحة",
+    invalidPhone: "صيغة رقم الهاتف غير صالحة",
+    required: "هذا الحقل مطلوب",
+    invalidDate: "صيغة التاريخ غير صالحة (YYYY-MM-DD)",
+    childRequirements: "تسجيل الطفل يتطلب معلومات الوالد",
+    independentChild: "طفل مستقل"
+  }
+}
 
 export default function RegisterPage() {
+  const router = useRouter()
+  const { language } = useLanguage()
+  const { toast } = useToast()
+  const t = translations[language]
+  const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
     userType: "parent",
-    familyCode: "",
     phoneNumber: "",
-    dateOfBirth: ""
+    dateOfBirth: "",
+    parentEmail: "",
+    parentPhone: ""
   })
-  const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
-  const { language } = useLanguage()
-
-  const translations = {
-    en: {
-      title: "Create an Account",
-      subtitle: "Join Nismah to protect and support children",
-      name: "Full Name",
-      email: "Email",
-      password: "Password",
-      confirmPassword: "Confirm Password",
-      register: "Create Account",
-      login: "Already have an account? Sign in",
-      error: "An error occurred. Please try again.",
-      passwordMismatch: "Passwords do not match",
-      userType: "Account Type",
-      parent: "Parent/Guardian",
-      child: "Child (Under 18)",
-      familyCode: "Family Code (Optional)",
-      familyCodeDescription: "Enter your family code to link accounts",
-      phoneNumber: "Phone Number",
-      dateOfBirth: "Date of Birth",
-      forChildAccounts: "For Child Accounts",
-      parentEmail: "Parent/Guardian Email",
-      parentPhone: "Parent/Guardian Phone"
-    },
-    ar: {
-      title: "إنشاء حساب",
-      subtitle: "انضم إلى نِسمة لحماية ودعم الأطفال",
-      name: "الاسم الكامل",
-      email: "البريد الإلكتروني",
-      password: "كلمة المرور",
-      confirmPassword: "تأكيد كلمة المرور",
-      register: "إنشاء حساب",
-      login: "لديك حساب بالفعل؟ تسجيل الدخول",
-      error: "حدث خطأ. يرجى المحاولة مرة أخرى.",
-      passwordMismatch: "كلمات المرور غير متطابقة",
-      userType: "نوع الحساب",
-      parent: "الوالد/الوصي",
-      child: "الطفل (أقل من 18)",
-      familyCode: "رمز العائلة (اختياري)",
-      familyCodeDescription: "أدخل رمز العائلة لربط الحسابات",
-      phoneNumber: "رقم الهاتف",
-      dateOfBirth: "تاريخ الميلاد",
-      forChildAccounts: "لحسابات الأطفال",
-      parentEmail: "بريد الوالد/الوصي الإلكتروني",
-      parentPhone: "هاتف الوالد/الوصي"
-    }
-  }
-
-  const t = translations[language]
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
-
-    if (formData.password !== formData.confirmPassword) {
-      setError(t.passwordMismatch)
-      return
-    }
-
     setIsLoading(true)
 
     try {
+      // Validate passwords match
+      if (formData.password !== formData.confirmPassword) {
+        toast({
+          title: t.error,
+          description: t.passwordsDontMatch,
+          variant: "destructive"
+        })
+        return
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(formData.email)) {
+        toast({
+          title: t.error,
+          description: t.invalidEmail,
+          variant: "destructive"
+        })
+        return
+      }
+
+      // Validate phone number format
+      const phoneRegex = /^\+?[\d\s-]{10,}$/
+      if (formData.phoneNumber && !phoneRegex.test(formData.phoneNumber)) {
+        toast({
+          title: t.error,
+          description: t.invalidPhone,
+          variant: "destructive"
+        })
+        return
+      }
+
+      // Validate date format
+      if (formData.dateOfBirth) {
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/
+        if (!dateRegex.test(formData.dateOfBirth)) {
+          toast({
+            title: t.error,
+            description: t.invalidDate,
+            variant: "destructive"
+          })
+          return
+        }
+      }
+
+      // Validate child registration requirements
+      if (formData.userType === "child") {
+        if (!formData.parentEmail || !formData.parentPhone || !formData.dateOfBirth) {
+          toast({
+            title: t.error,
+            description: t.childRequirements,
+            variant: "destructive"
+          })
+          return
+        }
+      }
+
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
@@ -98,28 +159,51 @@ export default function RegisterPage() {
           email: formData.email,
           password: formData.password,
           userType: formData.userType,
-          familyCode: formData.familyCode,
           phoneNumber: formData.phoneNumber,
-          dateOfBirth: formData.dateOfBirth
+          dateOfBirth: formData.dateOfBirth,
+          parentEmail: formData.parentEmail,
+          parentPhone: formData.parentPhone
         })
       })
 
+      const data = await response.json()
+
       if (!response.ok) {
-        throw new Error("Registration failed")
+        throw new Error(data.error || "Registration failed")
       }
 
-      router.push("/login?registered=true")
+      toast({
+        title: t.success,
+        description: t.registrationSuccess
+      })
+
+      // Redirect to login page after successful registration
+      setTimeout(() => {
+        router.push("/login")
+      }, 2000)
     } catch (error) {
-      setError(t.error)
+      toast({
+        title: t.error,
+        description: error instanceof Error ? error.message : "Registration failed",
+        variant: "destructive"
+      })
     } finally {
       setIsLoading(false)
     }
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [name]: value
+    }))
+  }
+
+  const handleUserTypeChange = (value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      userType: value
     }))
   }
 
@@ -140,24 +224,6 @@ export default function RegisterPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label>{t.userType}</Label>
-              <RadioGroup
-                defaultValue="parent"
-                onValueChange={(value) => setFormData(prev => ({ ...prev, userType: value }))}
-                className="flex flex-col space-y-2"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="parent" id="parent" />
-                  <Label htmlFor="parent">{t.parent}</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="child" id="child" />
-                  <Label htmlFor="child">{t.child}</Label>
-                </div>
-              </RadioGroup>
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="name">{t.name}</Label>
               <Input
                 id="name"
@@ -176,30 +242,6 @@ export default function RegisterPage() {
                 name="email"
                 type="email"
                 value={formData.email}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="phoneNumber">{t.phoneNumber}</Label>
-              <Input
-                id="phoneNumber"
-                name="phoneNumber"
-                type="tel"
-                value={formData.phoneNumber}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="dateOfBirth">{t.dateOfBirth}</Label>
-              <Input
-                id="dateOfBirth"
-                name="dateOfBirth"
-                type="date"
-                value={formData.dateOfBirth}
                 onChange={handleChange}
                 required
               />
@@ -230,45 +272,77 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="familyCode">{t.familyCode}</Label>
+              <Label>{t.userType}</Label>
+              <RadioGroup
+                value={formData.userType}
+                onValueChange={handleUserTypeChange}
+                className="flex flex-col gap-2"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="parent" id="parent" />
+                  <Label htmlFor="parent">{t.parent}</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="child" id="child" />
+                  <Label htmlFor="child">{t.child}</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="independent_child" id="independent_child" />
+                  <Label htmlFor="independent_child">{t.independentChild}</Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phoneNumber">{t.phoneNumber}</Label>
               <Input
-                id="familyCode"
-                name="familyCode"
-                type="text"
-                value={formData.familyCode}
+                id="phoneNumber"
+                name="phoneNumber"
+                type="tel"
+                value={formData.phoneNumber}
                 onChange={handleChange}
-                placeholder={t.familyCodeDescription}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="dateOfBirth">{t.dateOfBirth}</Label>
+              <Input
+                id="dateOfBirth"
+                name="dateOfBirth"
+                type="date"
+                value={formData.dateOfBirth}
+                onChange={handleChange}
+                required
               />
             </div>
 
             {formData.userType === "child" && (
-              <div className="space-y-4 p-4 border rounded-lg bg-gray-50 dark:bg-gray-800">
-                <h3 className="font-medium">{t.forChildAccounts}</h3>
+              <>
                 <div className="space-y-2">
                   <Label htmlFor="parentEmail">{t.parentEmail}</Label>
                   <Input
                     id="parentEmail"
                     name="parentEmail"
                     type="email"
+                    value={formData.parentEmail}
+                    onChange={handleChange}
                     required
                   />
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="parentPhone">{t.parentPhone}</Label>
                   <Input
                     id="parentPhone"
                     name="parentPhone"
                     type="tel"
+                    value={formData.parentPhone}
+                    onChange={handleChange}
                     required
                   />
                 </div>
-              </div>
-            )}
-
-            {error && (
-              <div className="text-sm text-red-500 text-center">
-                {error}
-              </div>
+              </>
             )}
 
             <Button
