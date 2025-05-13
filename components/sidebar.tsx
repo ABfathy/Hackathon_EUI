@@ -189,7 +189,7 @@ export default function Sidebar() {
       </Sheet>
 
       {/* Desktop Navigation */}
-      <div className="hidden md:flex flex-col border-r bg-background h-screen w-72 sticky top-0 rounded-r-3xl border-r-2 border-dashed border-purple-200 dark:border-gray-700">
+      <div className="hidden md:flex flex-col bg-background h-screen w-72 sticky top-0 rounded-r-3xl border-r-2 border-dashed border-purple-200 dark:border-gray-700">
         <div className="p-6">
           <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
             <div className="bg-yellow-200 dark:bg-gray-800/50 p-3 rounded-full animate-pulse">

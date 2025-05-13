@@ -172,10 +172,19 @@ export default function RegisterPage() {
         throw new Error(data.error || "Registration failed")
       }
 
-      toast({
-        title: t.success,
-        description: t.registrationSuccess
-      })
+      // Show success message with family code if it's a parent account
+      if (formData.userType === "parent" && data.user.familyCode) {
+        toast({
+          title: t.success,
+          description: `Registration successful! Your family code is: ${data.user.familyCode}. Please save this code as you'll need it to connect with your children's accounts.`,
+          duration: 10000
+        })
+      } else {
+        toast({
+          title: t.success,
+          description: t.registrationSuccess
+        })
+      }
 
       // Redirect to login page after successful registration
       setTimeout(() => {

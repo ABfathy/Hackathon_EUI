@@ -39,14 +39,13 @@ const translations = {
     unauthorized: "Please sign in to view your profile",
     signIn: "Sign In",
     familySection: "Family Management",
-    generateCode: "Generate Family Code",
     joinFamily: "Join Family",
     familyCode: "Family Code",
     enterCode: "Enter family code",
     copyCode: "Copy Code",
     codeCopied: "Code Copied!",
     familyMembers: "Family Members",
-    noFamilyCode: "No family code generated yet",
+    noFamilyCode: "No family code assigned",
     noMembers: "No family members yet",
     parent: "Parent/Guardian",
     child: "Child",
@@ -66,14 +65,13 @@ const translations = {
     unauthorized: "يرجى تسجيل الدخول لعرض ملفك الشخصي",
     signIn: "تسجيل الدخول",
     familySection: "إدارة العائلة",
-    generateCode: "إنشاء رمز العائلة",
     joinFamily: "الانضمام إلى العائلة",
     familyCode: "رمز العائلة",
     enterCode: "أدخل رمز العائلة",
     copyCode: "نسخ الرمز",
     codeCopied: "تم نسخ الرمز!",
     familyMembers: "أعضاء العائلة",
-    noFamilyCode: "لم يتم إنشاء رمز العائلة بعد",
+    noFamilyCode: "لم يتم تعيين رمز العائلة",
     noMembers: "لا يوجد أعضاء في العائلة بعد",
     parent: "الوالد/الوصي",
     child: "الطفل",
@@ -136,31 +134,6 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error("Error fetching family data:", error)
-    }
-  }
-
-  const handleGenerateCode = async () => {
-    setIsLoading(true)
-    try {
-      const response = await fetch("/api/family", {
-        method: "POST"
-      })
-      if (response.ok) {
-        const data = await response.json()
-        setFamilyCode(data.familyCode)
-        toast({
-          title: "Success",
-          description: "Family code generated successfully"
-        })
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to generate family code",
-        variant: "destructive"
-      })
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -250,68 +223,113 @@ export default function ProfilePage() {
     )
   }
 
+  // Get userType from session
+  const userType = session.user.userType;
+
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="container mx-auto py-8">
       <Card>
         <CardHeader>
           <CardTitle>{t.title}</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <h3 className="font-medium">{t.name}</h3>
-            <p>{session.user?.name}</p>
+        <CardContent className="space-y-6">
+          <div className="space-y-2">
+            <Label>{t.name}</Label>
+            <p>{session?.user?.name}</p>
           </div>
-          <div>
-            <h3 className="font-medium">{t.email}</h3>
-            <p>{session.user?.email}</p>
+          <div className="space-y-2">
+            <Label>{t.email}</Label>
+            <p>{session?.user?.email}</p>
           </div>
-          <div>
-            <h3 className="font-medium">{t.familyCode}</h3>
-            {familyCode ? (
-              <div className="flex items-center gap-2">
-                <Input 
-                  value={showFamilyCode ? familyCode : "••••••"} 
-                  readOnly 
-                  className="font-mono"
-                />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setShowFamilyCode(!showFamilyCode)}
-                >
-                  {showFamilyCode ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </Button>
-                {showFamilyCode && (
+
+          {/* Family Management Section */}
+          <div className="space-y-4 pt-4 border-t">
+            <h3 className="text-lg font-semibold">{t.familySection}</h3>
+            
+            {/* Family Code Display - Read Only */}
+            <div className="space-y-2">
+              <Label>{t.familyCode}</Label>
+              {familyCode ? (
+                <div className="flex items-center gap-2">
+                  <Input
+                    type={showFamilyCode ? "text" : "password"}
+                    value={familyCode}
+                    readOnly
+                    className="font-mono"
+                  />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setShowFamilyCode(!showFamilyCode)}
+                  >
+                    {showFamilyCode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
                   <Button
                     variant="outline"
                     size="icon"
                     onClick={copyToClipboard}
+                    disabled={copied}
                   >
-                    {copied ? (
-                      <Check className="h-4 w-4" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
+                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                   </Button>
-                )}
+                </div>
+              ) : (
+                <p className="text-muted-foreground">{t.noFamilyCode}</p>
+              )}
+            </div>
+
+            {/* Join Family Section - Only for independent children */}
+            {!familyCode && userType === "independent_child" && (
+              <div className="space-y-2">
+                <Label>{t.joinFamily}</Label>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder={t.enterCode}
+                    value={joinCode}
+                    onChange={(e) => setJoinCode(e.target.value)}
+                  />
+                  <Button
+                    onClick={handleJoinFamily}
+                    disabled={isLoading || !joinCode}
+                  >
+                    {t.joinFamily}
+                  </Button>
+                </div>
               </div>
-            ) : (
-              <p className="text-muted-foreground">{t.noFamilyCode}</p>
+            )}
+
+            {/* Family Members List */}
+            {familyMembers.length > 0 && (
+              <div className="space-y-2">
+                <Label>{t.familyMembers}</Label>
+                <div className="space-y-2">
+                  {familyMembers.map((member) => (
+                    <div
+                      key={member.id}
+                      className="flex items-center gap-2 p-2 rounded-lg bg-muted"
+                    >
+                      <Users className="h-4 w-4" />
+                      <span>{member.name}</span>
+                      <span className="text-sm text-muted-foreground">
+                        ({member.userType === "parent" ? t.parent : t.child})
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
           </div>
+
+          {/* Sign Out Button */}
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button
                 variant="destructive"
-                className="w-full sm:w-auto"
+                className="w-full"
                 disabled={isSigningOut}
               >
-                <LogOut className="h-4 w-4 mr-2" />
-                {t.signOut}
+                <LogOut className="mr-2 h-4 w-4" />
+                {isSigningOut ? t.loading : t.signOut}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
@@ -323,51 +341,12 @@ export default function ProfilePage() {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleSignOut}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
+                <AlertDialogAction onClick={handleSignOut}>
                   {t.confirm}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            {t.familySection}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <h3 className="font-medium">{t.familyMembers}</h3>
-            {familyMembers.length > 0 ? (
-              <div className="space-y-2">
-                {familyMembers.map((member) => (
-                  <div
-                    key={member.id}
-                    className="flex items-center justify-between p-2 bg-muted rounded-lg"
-                  >
-                    <div>
-                      <p className="font-medium">{member.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {member.email}
-                      </p>
-                    </div>
-                    <span className="text-sm text-muted-foreground">
-                      {member.userType === "parent" ? t.parent : t.child}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-muted-foreground">{t.noMembers}</p>
-            )}
-          </div>
         </CardContent>
       </Card>
     </div>

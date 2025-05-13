@@ -48,31 +48,6 @@ export async function GET() {
   }
 }
 
-// POST /api/family/generate - Generate a new family code
-export async function POST(request: Request) {
-  try {
-    const session = await getServerSession()
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const user = users.find(u => u.email === session.user.email)
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 })
-    }
-
-    // Generate new family code
-    const newFamilyCode = generateFamilyCode()
-    user.familyCode = newFamilyCode
-    familyCodes[newFamilyCode] = [user.id]
-
-    return NextResponse.json({ familyCode: newFamilyCode })
-  } catch (error) {
-    console.error("Family API error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
-  }
-}
-
 // PUT /api/family/join - Join a family using a code
 export async function PUT(request: Request) {
   try {
@@ -94,6 +69,13 @@ export async function PUT(request: Request) {
     // Check if family code exists
     if (!familyCodes[familyCode]) {
       return NextResponse.json({ error: "Invalid family code" }, { status: 400 })
+    }
+
+    // Only independent children can join a family
+    if (user.userType !== "independent_child") {
+      return NextResponse.json({ 
+        error: "Only independent children can join a family using a code" 
+      }, { status: 400 })
     }
 
     // Add user to family
