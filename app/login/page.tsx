@@ -23,7 +23,11 @@ const translations = {
     register: "Don't have an account? Create one",
     error: "Invalid email or password",
     success: "Registration successful! Please sign in.",
-    loading: "Signing in..."
+    loading: "Signing in...",
+    testAccounts: "Test Accounts",
+    testParent: "Login as Test Parent",
+    testChild: "Login as Test Child",
+    testIndependent: "Login as Test Independent Child"
   },
   ar: {
     title: "مرحباً بعودتك",
@@ -34,9 +38,31 @@ const translations = {
     register: "ليس لديك حساب؟ إنشاء حساب",
     error: "البريد الإلكتروني أو كلمة المرور غير صحيحة",
     success: "تم التسجيل بنجاح! يرجى تسجيل الدخول.",
-    loading: "جاري تسجيل الدخول..."
+    loading: "جاري تسجيل الدخول...",
+    testAccounts: "حسابات تجريبية",
+    testParent: "تسجيل الدخول كأب تجريبي",
+    testChild: "تسجيل الدخول كطفل تجريبي",
+    testIndependent: "تسجيل الدخول كطفل مستقل تجريبي"
   }
 }
+
+const TEST_USERS = [
+  {
+    email: 'test.parent@example.com',
+    password: 'test123',
+    label: 'testParent'
+  },
+  {
+    email: 'test.child@example.com',
+    password: 'test123',
+    label: 'testChild'
+  },
+  {
+    email: 'test.independent@example.com',
+    password: 'test123',
+    label: 'testIndependent'
+  }
+]
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -71,6 +97,15 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleTestUserLogin = (email: string, password: string) => {
+    setEmail(email)
+    setPassword(password)
+    // Trigger form submission after a short delay to ensure state is updated
+    setTimeout(() => {
+      handleSubmit(new Event('submit') as any)
+    }, 100)
   }
 
   return (
@@ -119,6 +154,27 @@ export default function LoginPage() {
                 {error}
               </div>
             )}
+
+            {/* Test Users Section */}
+            <div className="space-y-2 pt-4 border-t">
+              <h3 className="text-sm font-medium text-muted-foreground text-center">
+                {t.testAccounts}
+              </h3>
+              <div className="grid gap-2">
+                {TEST_USERS.map((user) => (
+                  <Button
+                    key={user.email}
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => handleTestUserLogin(user.email, user.password)}
+                  >
+                    {t[user.label as keyof typeof t]}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
             <Button
               type="submit"
               className="w-full"

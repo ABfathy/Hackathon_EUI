@@ -21,6 +21,73 @@ export let users: User[] = []
 // In-memory storage for family codes (replace with database in production)
 export let familyCodes: { [key: string]: string[] } = {}
 
+// Test users data
+const TEST_USERS = [
+  {
+    id: 'test-parent-1',
+    name: 'Test Parent',
+    email: 'test.parent@example.com',
+    password: 'test123',
+    userType: 'parent' as const,
+    phoneNumber: '+1234567890',
+    familyCode: 'TEST123',
+    createdAt: new Date()
+  },
+  {
+    id: 'test-child-1',
+    name: 'Test Child',
+    email: 'test.child@example.com',
+    password: 'test123',
+    userType: 'child' as const,
+    phoneNumber: '+1234567891',
+    dateOfBirth: '2010-01-01',
+    familyCode: 'TEST123',
+    parentEmail: 'test.parent@example.com',
+    parentPhone: '+1234567890',
+    createdAt: new Date()
+  },
+  {
+    id: 'test-independent-1',
+    name: 'Test Independent Child',
+    email: 'test.independent@example.com',
+    password: 'test123',
+    userType: 'independent_child' as const,
+    phoneNumber: '+1234567892',
+    dateOfBirth: '2010-01-01',
+    familyCode: 'IND123',
+    createdAt: new Date()
+  }
+]
+
+// Initialize test users
+async function initializeTestUsers() {
+  if (users.length === 0) {
+    for (const user of TEST_USERS) {
+      // Hash password
+      const hashedPassword = await bcrypt.hash(user.password, 10)
+      
+      // Create user with hashed password
+      const testUser = {
+        ...user,
+        password: hashedPassword
+      }
+      
+      users.push(testUser)
+
+      // Add to family codes
+      if (testUser.familyCode) {
+        if (!familyCodes[testUser.familyCode]) {
+          familyCodes[testUser.familyCode] = []
+        }
+        familyCodes[testUser.familyCode].push(testUser.id)
+      }
+    }
+  }
+}
+
+// Initialize test users when the module loads
+initializeTestUsers()
+
 // Generate a random family code
 function generateFamilyCode(): string {
   return Math.random().toString(36).substring(2, 8).toUpperCase()
