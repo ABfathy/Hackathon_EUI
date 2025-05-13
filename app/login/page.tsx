@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Shield, LogIn, UserPlus, Github, Mail } from "lucide-react"
+import { Wind, LogIn, UserPlus, Github, Mail } from "lucide-react"
 import { useLanguage } from "@/context/language-context"
 
 export default function LoginPage() {
@@ -17,14 +17,14 @@ export default function LoginPage() {
     <div className="container mx-auto flex items-center justify-center min-h-[80vh]">
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
-          <div className="inline-block p-3 bg-gradient-to-br from-yellow-200 to-purple-200 rounded-full text-purple-600 dark:from-yellow-800 dark:to-purple-800 dark:text-purple-300 shadow-lg mb-4">
-            <Shield className="h-10 w-10" />
+          <div className="inline-block p-3 bg-gradient-to-br from-yellow-200 to-purple-200 rounded-full text-purple-600 dark:from-yellow-800 dark:to-purple-800 dark:text-purple-300 animate-pulse shadow-lg mb-4">
+            <Wind className="h-10 w-10" />
           </div>
           <h1 className="text-3xl font-bold">
             {language === "en" ? (
-              <span className="text-purple-600">SafeGuard</span>
+              <span className="text-purple-600">Nismah</span>
             ) : (
-              <span className="text-emerald-600">حماية</span>
+              <span className="text-emerald-600">نِسمة</span>
             )}
           </h1>
         </div>

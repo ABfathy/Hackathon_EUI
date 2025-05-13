@@ -3,11 +3,37 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { BookOpen, Play, Award, Volume2, Shield, Users, Baby, School, GraduationCap, Gamepad2, ArrowLeft } from "lucide-react"
+import { BookOpen, Play, Award, Volume2, Wind, Users, Baby, School, GraduationCap, Gamepad2, ArrowLeft } from "lucide-react"
 import { useLanguage } from "@/context/language-context"
 import { useParams, useRouter } from "next/navigation"
+import { ReactElement } from "react"
 
-const translations = {
+type AgeGroup = "4-7" | "8-12" | "13-17"
+type Language = "en" | "ar"
+
+interface Activity {
+  title: string
+  description: string
+  icon: ReactElement
+  progress: number
+  type: string
+}
+
+interface AgeGroupContent {
+  title: string
+  description: string
+  activities: Activity[]
+}
+
+type Translations = {
+  [L in Language]: {
+    back: string
+  } & {
+    [A in AgeGroup]: AgeGroupContent
+  }
+}
+
+const translations: Translations = {
   en: {
     back: "Back to Resources",
     "4-7": {
@@ -24,7 +50,7 @@ const translations = {
         {
           title: "Safe and Unsafe Touch",
           description: "Interactive story about personal boundaries",
-          icon: <Shield className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
+          icon: <Wind className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
           progress: 0,
           type: "story"
         },
@@ -58,7 +84,7 @@ const translations = {
         {
           title: "Speaking Up",
           description: "Learn how to express concerns safely",
-          icon: <Shield className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
+          icon: <Wind className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
           progress: 0,
           type: "activity"
         }
@@ -108,7 +134,7 @@ const translations = {
         {
           title: "اللمس الآمن وغير الآمن",
           description: "قصة تفاعلية عن الحدود الشخصية",
-          icon: <Shield className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
+          icon: <Wind className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
           progress: 0,
           type: "story"
         },
@@ -142,7 +168,7 @@ const translations = {
         {
           title: "التعبير عن النفس",
           description: "تعلم كيفية التعبير عن المخاوف بأمان",
-          icon: <Shield className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
+          icon: <Wind className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
           progress: 0,
           type: "activity"
         }
@@ -182,8 +208,8 @@ export default function ChildrenAgeGroupPage() {
   const { language } = useLanguage()
   const params = useParams()
   const router = useRouter()
-  const ageGroup = params.age as string
-  const t = translations[language][ageGroup]
+  const ageGroup = params.age as AgeGroup
+  const t = translations[language as Language][ageGroup]
 
   return (
     <div className="space-y-8">
@@ -194,7 +220,7 @@ export default function ChildrenAgeGroupPage() {
           onClick={() => router.back()}
         >
           <ArrowLeft className="h-4 w-4" />
-          {translations[language].back}
+          {translations[language as Language].back}
         </Button>
       </div>
 
@@ -204,7 +230,7 @@ export default function ChildrenAgeGroupPage() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {t.activities.map((activity, index) => (
+        {t.activities.map((activity: Activity, index: number) => (
           <Card key={index} className="overflow-hidden border-purple-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-gray-600 transition-colors">
             <CardHeader className="p-6 text-center">
               <div className="bg-purple-100 dark:bg-gray-800/50 p-2 rounded-full w-fit mx-auto">

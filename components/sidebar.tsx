@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Home, BookOpen, AlertTriangle, MapPin, MessageCircle, Shield, Menu, Bot, Globe, LogIn, Moon, Sun, Languages } from "lucide-react"
+import { Home, BookOpen, AlertTriangle, MapPin, MessageCircle, Wind, Menu, Bot, Globe, LogIn, Moon, Sun, Languages } from "lucide-react"
 import { useLanguage } from "@/context/language-context"
 import { useTheme } from "next-themes"
 
@@ -53,7 +53,7 @@ const navItems: NavItem[] = [
     title: "Security & Privacy",
     titleAr: "الأمان والخصوصية",
     href: "/security",
-    icon: <Shield className="h-5 w-5" />,
+    icon: <Wind className="h-5 w-5" />,
   },
 ]
 
@@ -87,13 +87,13 @@ export default function Sidebar() {
           <div className="space-y-4 py-4">
             <div className="px-4 py-2">
               <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
-                <div className="bg-yellow-200 dark:bg-gray-800/50 p-2 rounded-full">
-                  <Shield className="h-5 w-5 text-purple-600 dark:text-gray-300" />
+                <div className="bg-yellow-200 dark:bg-gray-800/50 p-2 rounded-full animate-pulse">
+                  <Wind className="h-5 w-5 text-purple-600 dark:text-gray-300" />
                 </div>
                 {language === "en" ? (
-                  <span className="text-purple-600 dark:text-gray-200">SafeGuard</span>
+                  <span className="text-purple-600 dark:text-gray-200">Nismah</span>
                 ) : (
-                  <span className="text-emerald-600 dark:text-gray-200">حماية</span>
+                  <span className="text-emerald-600 dark:text-gray-200">نِسمة</span>
                 )}
               </h2>
             </div>
@@ -163,13 +163,13 @@ export default function Sidebar() {
       <div className="hidden md:flex flex-col border-r bg-background h-screen w-72 sticky top-0 rounded-r-3xl border-r-2 border-dashed border-purple-200 dark:border-gray-700">
         <div className="p-6">
           <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
-            <div className="bg-yellow-200 dark:bg-gray-800/50 p-3 rounded-full">
-              <Shield className="h-6 w-6 text-purple-600 dark:text-gray-300" />
+            <div className="bg-yellow-200 dark:bg-gray-800/50 p-3 rounded-full animate-pulse">
+              <Wind className="h-6 w-6 text-purple-600 dark:text-gray-300" />
             </div>
             {language === "en" ? (
-              <span className="text-purple-600 dark:text-gray-200">SafeGuard</span>
+              <span className="text-purple-600 dark:text-gray-200">Nismah</span>
             ) : (
-              <span className="text-emerald-600 dark:text-gray-200">حماية</span>
+              <span className="text-emerald-600 dark:text-gray-200">نِسمة</span>
             )}
           </h2>
         </div>

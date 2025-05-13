@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { MessageCircle, Lock, Users, Send, Shield, Info, Video, Search } from "lucide-react"
+import { MessageCircle, Lock, Users, Send, Wind, Info, Video, Search } from "lucide-react"
 import { useLanguage } from "@/context/language-context"
 
 const translations = {
@@ -175,7 +175,7 @@ export default function SupportPage() {
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium">Mark Smith</span>
-                            <Badge variant="outline" size="sm" className="text-xs">
+                            <Badge variant="outline" className="text-xs">
                               Moderator
                             </Badge>
                             <span className="text-xs text-muted-foreground">2:50 PM</span>
@@ -278,20 +278,20 @@ export default function SupportPage() {
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <div className="flex items-start gap-2">
-                      <Shield className="h-4 w-4 text-emerald-600 mt-0.5" />
-                      <p className="text-sm">{t.respectPrivacy}</p>
+                      <Wind className="h-4 w-4 text-emerald-600 mt-0.5" />
+                      <span>End-to-end encryption</span>
                     </div>
                     <div className="flex items-start gap-2">
-                      <Shield className="h-4 w-4 text-emerald-600 mt-0.5" />
-                      <p className="text-sm">{t.beSupportive}</p>
+                      <Wind className="h-4 w-4 text-emerald-600 mt-0.5" />
+                      <span>Secure data storage</span>
                     </div>
                     <div className="flex items-start gap-2">
-                      <Shield className="h-4 w-4 text-emerald-600 mt-0.5" />
-                      <p className="text-sm">{t.reportContent}</p>
+                      <Wind className="h-4 w-4 text-emerald-600 mt-0.5" />
+                      <span>Privacy protection</span>
                     </div>
                     <div className="flex items-start gap-2">
-                      <Shield className="h-4 w-4 text-emerald-600 mt-0.5" />
-                      <p className="text-sm">{t.noPersonalInfo}</p>
+                      <Wind className="h-4 w-4 text-emerald-600 mt-0.5" />
+                      <span>Safe environment</span>
                     </div>
                   </div>
                 </CardContent>

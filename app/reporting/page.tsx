@@ -10,7 +10,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
-import { AlertTriangle, CheckCircle, Clock, ExternalLink, FileText, Info, Phone, Shield } from "lucide-react"
+import { AlertTriangle, CheckCircle, Clock, ExternalLink, FileText, Info, Phone, Wind } from "lucide-react"
 import { useLanguage } from "@/context/language-context"
 
 const translations = {

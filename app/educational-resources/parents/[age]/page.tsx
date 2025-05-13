@@ -3,11 +3,36 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { BookOpen, Play, Award, Volume2, Shield, Users, Baby, School, GraduationCap, ArrowLeft } from "lucide-react"
+import { BookOpen, Play, Award, Volume2, Wind, Users, Baby, School, GraduationCap, ArrowLeft } from "lucide-react"
 import { useLanguage } from "@/context/language-context"
 import { useParams, useRouter } from "next/navigation"
+import { ReactElement } from "react"
 
-const translations = {
+type AgeGroup = "0-3" | "4-6" | "7-12" | "13-17"
+type Language = "en" | "ar"
+
+interface Course {
+  title: string
+  description: string
+  icon: ReactElement
+  progress: number
+}
+
+interface AgeGroupContent {
+  title: string
+  description: string
+  courses: Course[]
+}
+
+type Translations = {
+  [L in Language]: {
+    back: string
+  } & {
+    [A in AgeGroup]: AgeGroupContent
+  }
+}
+
+const translations: Translations = {
   en: {
     back: "Back to Resources",
     "0-3": {
@@ -21,9 +46,9 @@ const translations = {
           progress: 0
         },
         {
-          title: "Creating Safe Environments",
-          description: "How to childproof your home effectively",
-          icon: <Shield className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
+          title: "Safe Environment",
+          description: "Creating a safe home environment",
+          icon: <Wind className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
           progress: 0
         },
         {
@@ -39,9 +64,9 @@ const translations = {
       description: "Resources for parents of preschool-aged children",
       courses: [
         {
-          title: "Teaching Body Safety",
-          description: "Age-appropriate ways to discuss body safety",
-          icon: <Shield className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
+          title: "Safe Environment",
+          description: "Creating a safe home environment",
+          icon: <Wind className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
           progress: 0
         },
         {
@@ -65,7 +90,7 @@ const translations = {
         {
           title: "Digital Safety Basics",
           description: "Teaching safe internet use",
-          icon: <Shield className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
+          icon: <Wind className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
           progress: 0
         },
         {
@@ -89,7 +114,7 @@ const translations = {
         {
           title: "Online Safety",
           description: "Managing social media and digital presence",
-          icon: <Shield className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
+          icon: <Wind className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
           progress: 0
         },
         {
@@ -120,9 +145,9 @@ const translations = {
           progress: 0
         },
         {
-          title: "إنشاء بيئات آمنة",
-          description: "كيفية جعل منزلك آمناً للأطفال",
-          icon: <Shield className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
+          title: "Safe Environment",
+          description: "إنشاء بيئة منزلية آمنة",
+          icon: <Wind className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
           progress: 0
         },
         {
@@ -138,9 +163,9 @@ const translations = {
       description: "موارد لآباء الأطفال في سن ما قبل المدرسة",
       courses: [
         {
-          title: "تعليم سلامة الجسد",
-          description: "طرق مناسبة للعمر لمناقشة سلامة الجسد",
-          icon: <Shield className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
+          title: "Safe Environment",
+          description: "إنشاء بيئة منزلية آمنة",
+          icon: <Wind className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
           progress: 0
         },
         {
@@ -164,7 +189,7 @@ const translations = {
         {
           title: "أساسيات السلامة الرقمية",
           description: "تعليم الاستخدام الآمن للإنترنت",
-          icon: <Shield className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
+          icon: <Wind className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
           progress: 0
         },
         {
@@ -188,7 +213,7 @@ const translations = {
         {
           title: "السلامة عبر الإنترنت",
           description: "إدارة وسائل التواصل الاجتماعي والحضور الرقمي",
-          icon: <Shield className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
+          icon: <Wind className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
           progress: 0
         },
         {
@@ -212,8 +237,8 @@ export default function ParentAgeGroupPage() {
   const { language } = useLanguage()
   const params = useParams()
   const router = useRouter()
-  const ageGroup = params.age as string
-  const t = translations[language][ageGroup]
+  const ageGroup = params.age as AgeGroup
+  const t = translations[language as Language][ageGroup]
 
   return (
     <div className="space-y-8">
@@ -224,7 +249,7 @@ export default function ParentAgeGroupPage() {
           onClick={() => router.back()}
         >
           <ArrowLeft className="h-4 w-4" />
-          {translations[language].back}
+          {translations[language as Language].back}
         </Button>
       </div>
 
@@ -234,7 +259,7 @@ export default function ParentAgeGroupPage() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {t.courses.map((course, index) => (
+        {t.courses.map((course: { title: string; description: string; icon: ReactElement; progress: number }, index: number) => (
           <Card key={index} className="overflow-hidden border-purple-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-gray-600 transition-colors">
             <CardHeader className="p-6 text-center">
               <div className="bg-purple-100 dark:bg-gray-800/50 p-2 rounded-full w-fit mx-auto">

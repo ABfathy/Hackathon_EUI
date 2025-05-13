@@ -9,9 +9,9 @@ import { Toaster } from "@/components/ui/toaster"
 const comfortaa = Comfortaa({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "SafeGuard (حماية) - Child Protection Platform",
+  title: "Nismah (نِسمة) - Child Protection Platform",
   description: "A comprehensive platform for child safety and protection",
-    generator: 'v0.dev'
+  generator: 'v0.dev'
 }
 
 export default function RootLayout({

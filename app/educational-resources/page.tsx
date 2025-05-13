@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { BookOpen, Play, Award, VolumeX, Volume2, Sparkles, Shield, Users, Baby, School, GraduationCap } from "lucide-react"
+import { BookOpen, Play, Award, VolumeX, Volume2, Sparkles, Wind, Users, Baby, School, GraduationCap } from "lucide-react"
 import { useLanguage } from "@/context/language-context"
 import Link from "next/link"
 

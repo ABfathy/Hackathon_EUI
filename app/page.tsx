@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { AlertTriangle, BookOpen, MapPin, MessageCircle, Bot, ArrowRight } from "lucide-react"
+import { AlertTriangle, BookOpen, MapPin, MessageCircle, Bot, ArrowRight, Wind } from "lucide-react"
 import Link from "next/link"
 import { useLanguage } from "@/context/language-context"
 
@@ -13,27 +13,14 @@ export default function HomePage() {
     <div className="container mx-auto space-y-10 max-w-6xl">
       <section className="space-y-6">
         <div className="flex flex-col items-center text-center space-y-6 py-12">
-          <div className="inline-block p-3 bg-gradient-to-br from-yellow-200 to-purple-200 rounded-full text-purple-600 dark:from-yellow-800 dark:to-purple-800 dark:text-purple-300 animate-bounce-slow shadow-lg">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-12 w-12"
-            >
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-            </svg>
+          <div className="inline-block p-3 bg-gradient-to-br from-yellow-200 to-purple-200 rounded-full text-purple-600 dark:from-yellow-800 dark:to-purple-800 dark:text-purple-300 animate-pulse shadow-lg">
+            <Wind className="h-12 w-12" />
           </div>
           <h1 className="text-5xl font-bold tracking-tight">
             {language === "en" ? (
-              <span className="text-purple-600">SafeGuard</span>
+              <span className="text-purple-600">Nismah</span>
             ) : (
-              <span className="text-emerald-600">حماية</span>
+              <span className="text-emerald-600">نِسمة</span>
             )}
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl">
