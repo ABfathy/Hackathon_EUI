@@ -11,6 +11,7 @@ import { Home, BookOpen, AlertTriangle, MapPin, MessageCircle, Wind, Menu, Bot, 
 import { useLanguage } from "@/context/language-context"
 import { useTheme } from "next-themes"
 import { useSession, signOut } from "next-auth/react"
+import { useToast } from "@/components/ui/use-toast"
 
 interface NavItem {
   title: string
@@ -65,11 +66,42 @@ export default function Sidebar() {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const { data: session } = useSession()
+  const { toast } = useToast()
+  const [isSigningOut, setIsSigningOut] = useState(false)
 
   // Only show theme toggle after mounting to prevent hydration mismatch
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Handle sign out with direct navigation
+  const handleSignOut = async () => {
+    try {
+      setIsSigningOut(true)
+      
+      // Sign out without redirect parameter
+      await signOut({ 
+        redirect: false,
+      });
+      
+      // Show success toast
+      toast({
+        title: language === "en" ? "Successfully signed out" : "تم تسجيل الخروج بنجاح",
+        duration: 1500
+      });
+      
+      // Force page reload to clear any session state that might remain in memory
+      window.location.href = "/login";
+    } catch (error) {
+      console.error("Sign out error:", error)
+      toast({
+        title: "Error",
+        description: "Failed to sign out",
+        variant: "destructive"
+      })
+      setIsSigningOut(false)
+    }
+  }
 
   const renderAuthButtons = () => {
     if (session) {
@@ -83,11 +115,12 @@ export default function Sidebar() {
           </Link>
           <Button
             variant="outline"
-            onClick={() => signOut({ callbackUrl: "/login" })}
+            onClick={handleSignOut}
             className="w-full flex items-center gap-2 rounded-xl h-12 text-base border-purple-200 dark:border-gray-700"
+            disabled={isSigningOut}
           >
             <LogOut className="h-5 w-5 text-purple-600 dark:text-gray-300" />
-            <span className="truncate">{language === "en" ? "Sign Out" : "تسجيل الخروج"}</span>
+            <span className="truncate">{isSigningOut ? (language === "en" ? "Signing Out..." : "جاري الخروج...") : (language === "en" ? "Sign Out" : "تسجيل الخروج")}</span>
           </Button>
         </>
       )

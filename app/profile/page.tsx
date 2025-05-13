@@ -187,16 +187,19 @@ export default function ProfilePage() {
     try {
       setIsSigningOut(true)
       
-      // Just sign out without deleting data
+      // Sign out without redirect parameter
       await signOut({ 
-        callbackUrl: "/login",
-        redirect: true
-      })
+        redirect: false,
+      });
       
+      // Show success toast
       toast({
         title: t.signOutSuccess,
-        duration: 3000
-      })
+        duration: 1500
+      });
+      
+      // Force page reload to clear any session state that might remain in memory
+      window.location.href = "/login";
     } catch (error) {
       console.error("Sign out error:", error)
       toast({
@@ -204,7 +207,6 @@ export default function ProfilePage() {
         description: "Failed to sign out",
         variant: "destructive"
       })
-    } finally {
       setIsSigningOut(false)
     }
   }
