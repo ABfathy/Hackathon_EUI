@@ -1,3 +1,5 @@
+'use client'
+
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -8,16 +10,133 @@ import { Separator } from "@/components/ui/separator"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Lock, UserCheck, Eye, Bot, AlertTriangle } from "lucide-react"
+import { useLanguage } from "@/context/language-context"
+
+const translations = {
+  en: {
+    title: "Security & Privacy",
+    subtitle: "Manage your security settings, privacy preferences, and account verification.",
+    securityReminder: "Security Reminder",
+    securityDescription: "Protecting your account helps safeguard sensitive information. We recommend enabling two-factor authentication.",
+    enable2FA: "Enable 2FA",
+    profileVerification: "Profile Verification",
+    profileDescription: "Verify your identity to ensure a safe environment for all users",
+    emailVerification: "Email Verification",
+    emailVerified: "Your email has been verified",
+    phoneVerification: "Phone Verification",
+    phoneDescription: "Verify your phone number for additional security",
+    verifyNow: "Verify Now",
+    idVerification: "ID Verification",
+    idDescription: "Required for certain features and higher trust levels",
+    uploadID: "Upload ID",
+    ageVerification: "Age Verification",
+    ageDescription: "For child safety, we require age verification for accounts of children under 18. Parents or guardians must complete this verification.",
+    accountType: "Account Type",
+    parentAccount: "Parent/Guardian Account",
+    childAccount: "Child Account (Under 18)",
+    forChildAccounts: "For Child Accounts",
+    parentEmail: "Parent/Guardian Email",
+    parentPhone: "Parent/Guardian Phone",
+    verificationNote: "We'll send a verification link to the parent/guardian to approve this account.",
+    saveVerification: "Save Verification Settings",
+    privacySettings: "Privacy Settings",
+    privacyDescription: "Control how your information is used and shared",
+    profileVisibility: "Profile Visibility",
+    visibilityDescription: "Control who can see your profile information",
+    private: "Private",
+    activityTracking: "Activity Tracking",
+    trackingDescription: "Allow us to collect usage data to improve services",
+    locationServices: "Location Services",
+    locationDescription: "Allow access to your location for local alerts",
+    dataManagement: "Data Management",
+    changePassword: "Change Password",
+    newPassword: "New password",
+    dataDeletion: "Data Deletion",
+    deletionDescription: "Request deletion of all your data from our platform",
+    requestDeletion: "Request Deletion",
+    consentManagement: "Consent Management",
+    privacyConsent: "I consent to the processing of my personal data as described in the Privacy Policy",
+    marketingConsent: "I consent to receiving safety updates and educational materials via email",
+    researchConsent: "I consent to my anonymized data being used for research to improve child safety",
+    savePrivacy: "Save Privacy Settings",
+    aiSettings: "AI Assistant Settings",
+    aiDescription: "Configure how the AI assistant interacts with you",
+    enableAI: "Enable AI Assistant",
+    aiDescription2: "Turn the AI assistant on or off",
+    voiceGuidance: "Voice Guidance",
+    voiceDescription: "Enable voice responses from the AI assistant",
+    childFriendlyMode: "Child-Friendly Mode",
+    childFriendlyDescription: "Simplify language and content for younger users"
+  },
+  ar: {
+    title: "الأمان والخصوصية",
+    subtitle: "إدارة إعدادات الأمان وتفضيلات الخصوصية والتحقق من الحساب.",
+    securityReminder: "تذكير الأمان",
+    securityDescription: "حماية حسابك تساعد في حماية المعلومات الحساسة. نوصي بتفعيل المصادقة الثنائية.",
+    enable2FA: "تفعيل المصادقة الثنائية",
+    profileVerification: "التحقق من الملف الشخصي",
+    profileDescription: "تحقق من هويتك لضمان بيئة آمنة لجميع المستخدمين",
+    emailVerification: "التحقق من البريد الإلكتروني",
+    emailVerified: "تم التحقق من بريدك الإلكتروني",
+    phoneVerification: "التحقق من رقم الهاتف",
+    phoneDescription: "تحقق من رقم هاتفك لأمان إضافي",
+    verifyNow: "تحقق الآن",
+    idVerification: "التحقق من الهوية",
+    idDescription: "مطلوب لميزات معينة ومستويات ثقة أعلى",
+    uploadID: "رفع الهوية",
+    ageVerification: "التحقق من العمر",
+    ageDescription: "لسلامة الأطفال، نطلب التحقق من العمر للحسابات التي تقل أعمارهم عن 18 عاماً. يجب على الوالدين أو الأوصياء إكمال هذا التحقق.",
+    accountType: "نوع الحساب",
+    parentAccount: "حساب الوالد/الوصي",
+    childAccount: "حساب الطفل (أقل من 18)",
+    forChildAccounts: "لحسابات الأطفال",
+    parentEmail: "بريد الوالد/الوصي الإلكتروني",
+    parentPhone: "هاتف الوالد/الوصي",
+    verificationNote: "سنرسل رابط تحقق إلى الوالد/الوصي للموافقة على هذا الحساب.",
+    saveVerification: "حفظ إعدادات التحقق",
+    privacySettings: "إعدادات الخصوصية",
+    privacyDescription: "التحكم في كيفية استخدام ومشاركة معلوماتك",
+    profileVisibility: "رؤية الملف الشخصي",
+    visibilityDescription: "التحكم في من يمكنه رؤية معلومات ملفك الشخصي",
+    private: "خاص",
+    activityTracking: "تتبع النشاط",
+    trackingDescription: "السماح لنا بجمع بيانات الاستخدام لتحسين الخدمات",
+    locationServices: "خدمات الموقع",
+    locationDescription: "السماح بالوصول إلى موقعك للتنبيهات المحلية",
+    dataManagement: "إدارة البيانات",
+    changePassword: "تغيير كلمة المرور",
+    newPassword: "كلمة مرور جديدة",
+    dataDeletion: "حذف البيانات",
+    deletionDescription: "طلب حذف جميع بياناتك من منصتنا",
+    requestDeletion: "طلب الحذف",
+    consentManagement: "إدارة الموافقة",
+    privacyConsent: "أوافق على معالجة بياناتي الشخصية كما هو موضح في سياسة الخصوصية",
+    marketingConsent: "أوافق على تلقي تحديثات السلامة والمواد التعليمية عبر البريد الإلكتروني",
+    researchConsent: "أوافق على استخدام بياناتي المجهولة المصدر للبحث لتحسين سلامة الأطفال",
+    savePrivacy: "حفظ إعدادات الخصوصية",
+    aiSettings: "إعدادات المساعد الذكي",
+    aiDescription: "تكوين كيفية تفاعل المساعد الذكي معك",
+    enableAI: "تفعيل المساعد الذكي",
+    aiDescription2: "تشغيل أو إيقاف المساعد الذكي",
+    voiceGuidance: "التوجيه الصوتي",
+    voiceDescription: "تفعيل الردود الصوتية من المساعد الذكي",
+    childFriendlyMode: "الوضع الصديق للأطفال",
+    childFriendlyDescription: "تبسيط اللغة والمحتوى للمستخدمين الأصغر سناً"
+  }
+}
 
 export default function SecurityPage() {
+  const { language } = useLanguage()
+  const t = translations[language]
+
   return (
     <div className="container mx-auto space-y-8 max-w-6xl">
       <div className="flex flex-col space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">
-          Security & Privacy <span className="text-emerald-600 text-xl">(الأمان والخصوصية)</span>
+          {t.title}
         </h1>
         <p className="text-muted-foreground">
-          Manage your security settings, privacy preferences, and account verification.
+          {t.subtitle}
         </p>
       </div>
 
@@ -27,35 +146,34 @@ export default function SecurityPage() {
             <AlertTriangle className="h-10 w-10 text-amber-600" />
           </div>
           <div className="flex-1 space-y-2 text-center md:text-left">
-            <h3 className="text-xl font-semibold">Security Reminder</h3>
+            <h3 className="text-xl font-semibold">{t.securityReminder}</h3>
             <p className="text-muted-foreground">
-              Protecting your account helps safeguard sensitive information. We recommend enabling two-factor
-              authentication.
+              {t.securityDescription}
             </p>
           </div>
-          <Button className="bg-amber-600 hover:bg-amber-700 text-white">Enable 2FA</Button>
+          <Button className="bg-amber-600 hover:bg-amber-700 text-white">{t.enable2FA}</Button>
         </CardContent>
       </Card>
 
       <Tabs defaultValue="profile" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="profile">Profile Verification</TabsTrigger>
-          <TabsTrigger value="privacy">Privacy Settings</TabsTrigger>
-          <TabsTrigger value="assistant">AI Assistant Settings</TabsTrigger>
+          <TabsTrigger value="profile">{t.profileVerification}</TabsTrigger>
+          <TabsTrigger value="privacy">{t.privacySettings}</TabsTrigger>
+          <TabsTrigger value="assistant">{t.aiSettings}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile" className="space-y-6 pt-6">
           <Card>
             <CardHeader>
-              <CardTitle>Profile Verification</CardTitle>
-              <CardDescription>Verify your identity to ensure a safe environment for all users</CardDescription>
+              <CardTitle>{t.profileVerification}</CardTitle>
+              <CardDescription>{t.profileDescription}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label className="text-base">Email Verification</Label>
-                    <p className="text-sm text-muted-foreground">Your email has been verified</p>
+                    <Label className="text-base">{t.emailVerification}</Label>
+                    <p className="text-sm text-muted-foreground">{t.emailVerified}</p>
                   </div>
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
                     <UserCheck className="h-4 w-4" />
@@ -64,62 +182,59 @@ export default function SecurityPage() {
                 <Separator />
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label className="text-base">Phone Verification</Label>
-                    <p className="text-sm text-muted-foreground">Verify your phone number for additional security</p>
+                    <Label className="text-base">{t.phoneVerification}</Label>
+                    <p className="text-sm text-muted-foreground">{t.phoneDescription}</p>
                   </div>
-                  <Button size="sm">Verify Now</Button>
+                  <Button size="sm">{t.verifyNow}</Button>
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label className="text-base">ID Verification</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Required for certain features and higher trust levels
-                    </p>
+                    <Label className="text-base">{t.idVerification}</Label>
+                    <p className="text-sm text-muted-foreground">{t.idDescription}</p>
                   </div>
                   <Button size="sm" variant="outline">
-                    Upload ID
+                    {t.uploadID}
                   </Button>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-lg font-medium">Age Verification</h3>
+                <h3 className="text-lg font-medium">{t.ageVerification}</h3>
                 <p className="text-sm text-muted-foreground">
-                  For child safety, we require age verification for accounts of children under 18. Parents or guardians
-                  must complete this verification.
+                  {t.ageDescription}
                 </p>
 
                 <div className="space-y-2">
-                  <Label>Account Type</Label>
+                  <Label>{t.accountType}</Label>
                   <RadioGroup defaultValue="parent">
                     <div className="flex flex-col space-y-2">
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="parent" id="parent" />
-                        <Label htmlFor="parent">Parent/Guardian Account</Label>
+                        <Label htmlFor="parent">{t.parentAccount}</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="child" id="child" />
-                        <Label htmlFor="child">Child Account (Under 18)</Label>
+                        <Label htmlFor="child">{t.childAccount}</Label>
                       </div>
                     </div>
                   </RadioGroup>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>For Child Accounts</Label>
+                  <Label>{t.forChildAccounts}</Label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input placeholder="Parent/Guardian Email" />
-                    <Input placeholder="Parent/Guardian Phone" />
+                    <Input placeholder={t.parentEmail} />
+                    <Input placeholder={t.parentPhone} />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    We'll send a verification link to the parent/guardian to approve this account.
+                    {t.verificationNote}
                   </p>
                 </div>
               </div>
             </CardContent>
             <CardFooter>
-              <Button className="w-full">Save Verification Settings</Button>
+              <Button className="w-full">{t.saveVerification}</Button>
             </CardFooter>
           </Card>
         </TabsContent>
@@ -127,48 +242,48 @@ export default function SecurityPage() {
         <TabsContent value="privacy" className="space-y-6 pt-6">
           <Card>
             <CardHeader>
-              <CardTitle>Privacy Settings</CardTitle>
-              <CardDescription>Control how your information is used and shared</CardDescription>
+              <CardTitle>{t.privacySettings}</CardTitle>
+              <CardDescription>{t.privacyDescription}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label className="text-base">Profile Visibility</Label>
-                    <p className="text-sm text-muted-foreground">Control who can see your profile information</p>
+                    <Label className="text-base">{t.profileVisibility}</Label>
+                    <p className="text-sm text-muted-foreground">{t.visibilityDescription}</p>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Button variant="outline" size="sm" className="gap-1">
                       <Lock className="h-3.5 w-3.5" />
-                      <span>Private</span>
+                      <span>{t.private}</span>
                     </Button>
                   </div>
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label className="text-base">Activity Tracking</Label>
-                    <p className="text-sm text-muted-foreground">Allow us to collect usage data to improve services</p>
+                    <Label className="text-base">{t.activityTracking}</Label>
+                    <p className="text-sm text-muted-foreground">{t.trackingDescription}</p>
                   </div>
                   <Switch />
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label className="text-base">Location Services</Label>
-                    <p className="text-sm text-muted-foreground">Allow access to your location for local alerts</p>
+                    <Label className="text-base">{t.locationServices}</Label>
+                    <p className="text-sm text-muted-foreground">{t.locationDescription}</p>
                   </div>
                   <Switch />
                 </div>
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-lg font-medium">Data Management</h3>
+                <h3 className="text-lg font-medium">{t.dataManagement}</h3>
                 <div className="space-y-2">
                   <div className="flex flex-col space-y-1.5">
-                    <Label htmlFor="password">Change Password</Label>
+                    <Label htmlFor="password">{t.changePassword}</Label>
                     <div className="relative">
-                      <Input id="password" type="password" placeholder="New password" />
+                      <Input id="password" type="password" placeholder={t.newPassword} />
                       <Button variant="ghost" size="icon" className="absolute right-0 top-0 h-full">
                         <Eye className="h-4 w-4" />
                       </Button>
@@ -177,42 +292,42 @@ export default function SecurityPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Data Deletion</Label>
+                  <Label>{t.dataDeletion}</Label>
                   <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-950 rounded-lg border border-red-200 dark:border-red-800">
-                    <p className="text-sm">Request deletion of all your data from our platform</p>
+                    <p className="text-sm">{t.deletionDescription}</p>
                     <Button variant="destructive" size="sm">
-                      Request Deletion
+                      {t.requestDeletion}
                     </Button>
                   </div>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-lg font-medium">Consent Management</h3>
+                <h3 className="text-lg font-medium">{t.consentManagement}</h3>
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2">
                     <Checkbox id="terms" />
                     <Label htmlFor="terms" className="text-sm">
-                      I consent to the processing of my personal data as described in the Privacy Policy
+                      {t.privacyConsent}
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Checkbox id="marketing" />
                     <Label htmlFor="marketing" className="text-sm">
-                      I consent to receiving safety updates and educational materials via email
+                      {t.marketingConsent}
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Checkbox id="research" />
                     <Label htmlFor="research" className="text-sm">
-                      I consent to my anonymized data being used for research to improve child safety
+                      {t.researchConsent}
                     </Label>
                   </div>
                 </div>
               </div>
             </CardContent>
             <CardFooter>
-              <Button className="w-full">Save Privacy Settings</Button>
+              <Button className="w-full">{t.savePrivacy}</Button>
             </CardFooter>
           </Card>
         </TabsContent>
@@ -220,31 +335,31 @@ export default function SecurityPage() {
         <TabsContent value="assistant" className="space-y-6 pt-6">
           <Card>
             <CardHeader>
-              <CardTitle>AI Assistant Settings</CardTitle>
-              <CardDescription>Configure how the AI assistant interacts with you</CardDescription>
+              <CardTitle>{t.aiSettings}</CardTitle>
+              <CardDescription>{t.aiDescription}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label className="text-base">Enable AI Assistant</Label>
-                    <p className="text-sm text-muted-foreground">Turn the AI assistant on or off</p>
+                    <Label className="text-base">{t.enableAI}</Label>
+                    <p className="text-sm text-muted-foreground">{t.aiDescription2}</p>
                   </div>
                   <Switch />
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label className="text-base">Voice Guidance</Label>
-                    <p className="text-sm text-muted-foreground">Enable voice responses from the AI assistant</p>
+                    <Label className="text-base">{t.voiceGuidance}</Label>
+                    <p className="text-sm text-muted-foreground">{t.voiceDescription}</p>
                   </div>
                   <Switch />
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label className="text-base">Child-Friendly Mode</Label>
-                    <p className="text-sm text-muted-foreground">Simplify language and content for younger users</p>
+                    <Label className="text-base">{t.childFriendlyMode}</Label>
+                    <p className="text-sm text-muted-foreground">{t.childFriendlyDescription}</p>
                   </div>
                   <Switch />
                 </div>

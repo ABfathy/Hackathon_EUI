@@ -1,3 +1,5 @@
+'use client'
+
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -6,16 +8,97 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { MessageCircle, Lock, Users, Send, Shield, Info, Video, Search } from "lucide-react"
+import { useLanguage } from "@/context/language-context"
+
+const translations = {
+  en: {
+    title: "Support Forum",
+    subtitle: "Connect with counselors and join moderated forums for support and guidance.",
+    privacyTitle: "Privacy & Confidentiality",
+    privacyDescription: "All conversations in our support forums are confidential. Your privacy is our priority.",
+    privacyPolicy: "Privacy Policy",
+    supportForums: "Support Forums",
+    expertCounseling: "Expert Counseling",
+    supportResources: "Support Resources",
+    confidentialChatrooms: "Confidential Chatrooms",
+    chatroomsDescription: "Moderated forums for parents and children to discuss sensitive issues",
+    parentsSupportGroup: "Parents Support Group",
+    active: "Active",
+    membersOnline: "members online",
+    typeMessage: "Type your message...",
+    messagesConfidential: "All messages are confidential and moderated for safety.",
+    viewOtherForums: "View Other Forums",
+    joinDiscussion: "Join Discussion",
+    availableForums: "Available Forums",
+    joinGroups: "Join specialized support groups",
+    teens: "Teens (13-17)",
+    children: "Children (8-12)",
+    educators: "Educators",
+    comingSoon: "Coming Soon",
+    createAccount: "Create Account to Join",
+    forumGuidelines: "Forum Guidelines",
+    guidelinesDescription: "Rules for safe and supportive discussions",
+    respectPrivacy: "Respect privacy and confidentiality of all members",
+    beSupportive: "Be supportive and non-judgmental in all interactions",
+    reportContent: "Report any concerning content to moderators",
+    noPersonalInfo: "Do not share personal identifying information",
+    childPsychologist: "Child Psychologist",
+    available: "Available",
+    specializedIn: "Specialized in child trauma and recovery",
+    specializations: "Specializations:",
+    traumaRecovery: "Trauma Recovery"
+  },
+  ar: {
+    title: "منتدى الدعم",
+    subtitle: "تواصل مع المستشارين وانضم إلى المنتديات المعتدلة للحصول على الدعم والتوجيه.",
+    privacyTitle: "الخصوصية والسرية",
+    privacyDescription: "جميع المحادثات في منتديات الدعم لدينا سرية. خصوصيتك هي أولويتنا.",
+    privacyPolicy: "سياسة الخصوصية",
+    supportForums: "منتديات الدعم",
+    expertCounseling: "استشارة الخبراء",
+    supportResources: "موارد الدعم",
+    confidentialChatrooms: "غرف الدردشة السرية",
+    chatroomsDescription: "منتديات معتدلة للآباء والأطفال لمناقشة القضايا الحساسة",
+    parentsSupportGroup: "مجموعة دعم الآباء",
+    active: "نشط",
+    membersOnline: "أعضاء متصلون",
+    typeMessage: "اكتب رسالتك...",
+    messagesConfidential: "جميع الرسائل سرية وتخضع للإشراف من أجل السلامة.",
+    viewOtherForums: "عرض المنتديات الأخرى",
+    joinDiscussion: "انضم إلى المناقشة",
+    availableForums: "المنتديات المتاحة",
+    joinGroups: "انضم إلى مجموعات الدعم المتخصصة",
+    teens: "المراهقون (13-17)",
+    children: "الأطفال (8-12)",
+    educators: "المعلمون",
+    comingSoon: "قريباً",
+    createAccount: "إنشاء حساب للانضمام",
+    forumGuidelines: "إرشادات المنتدى",
+    guidelinesDescription: "قواعد للمناقشات الآمنة والداعمة",
+    respectPrivacy: "احترم خصوصية وسرية جميع الأعضاء",
+    beSupportive: "كن داعماً وغير متحيز في جميع التفاعلات",
+    reportContent: "بلغ عن أي محتوى مثير للقلق للمشرفين",
+    noPersonalInfo: "لا تشارك المعلومات الشخصية",
+    childPsychologist: "طبيب نفساني للأطفال",
+    available: "متاح",
+    specializedIn: "متخصص في صدمات الأطفال والتعافي",
+    specializations: "التخصصات:",
+    traumaRecovery: "التعافي من الصدمات"
+  }
+}
 
 export default function SupportPage() {
+  const { language } = useLanguage()
+  const t = translations[language]
+
   return (
     <div className="container mx-auto space-y-8 max-w-6xl">
       <div className="flex flex-col space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">
-          Support Forum <span className="text-emerald-600 text-xl">(منتدى الدعم)</span>
+          {t.title}
         </h1>
         <p className="text-muted-foreground">
-          Connect with counselors and join moderated forums for support and guidance.
+          {t.subtitle}
         </p>
       </div>
 
@@ -25,22 +108,22 @@ export default function SupportPage() {
             <Lock className="h-10 w-10 text-blue-600" />
           </div>
           <div className="flex-1 space-y-2 text-center md:text-left">
-            <h3 className="text-xl font-semibold">Privacy & Confidentiality</h3>
+            <h3 className="text-xl font-semibold">{t.privacyTitle}</h3>
             <p className="text-muted-foreground">
-              All conversations in our support forums are confidential. Your privacy is our priority.
+              {t.privacyDescription}
             </p>
           </div>
           <Button variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
-            Privacy Policy
+            {t.privacyPolicy}
           </Button>
         </CardContent>
       </Card>
 
       <Tabs defaultValue="forums" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="forums">Support Forums</TabsTrigger>
-          <TabsTrigger value="counseling">Expert Counseling</TabsTrigger>
-          <TabsTrigger value="resources">Support Resources</TabsTrigger>
+          <TabsTrigger value="forums">{t.supportForums}</TabsTrigger>
+          <TabsTrigger value="counseling">{t.expertCounseling}</TabsTrigger>
+          <TabsTrigger value="resources">{t.supportResources}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="forums" className="space-y-6 pt-6">
@@ -48,9 +131,9 @@ export default function SupportPage() {
             <div className="lg:col-span-2">
               <Card>
                 <CardHeader>
-                  <CardTitle>Confidential Chatrooms</CardTitle>
+                  <CardTitle>{t.confidentialChatrooms}</CardTitle>
                   <CardDescription>
-                    Moderated forums for parents and children to discuss sensitive issues
+                    {t.chatroomsDescription}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-0">
@@ -59,11 +142,11 @@ export default function SupportPage() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Users className="h-5 w-5 text-muted-foreground" />
-                          <h3 className="font-medium">Parents Support Group</h3>
-                          <Badge className="ml-2">Active</Badge>
+                          <h3 className="font-medium">{t.parentsSupportGroup}</h3>
+                          <Badge className="ml-2">{t.active}</Badge>
                         </div>
                         <Badge variant="outline" className="text-xs">
-                          24 members online
+                          24 {t.membersOnline}
                         </Badge>
                       </div>
                     </div>
@@ -123,20 +206,20 @@ export default function SupportPage() {
 
                     <div className="p-4 border-t">
                       <div className="flex gap-2">
-                        <Input placeholder="Type your message..." className="flex-1" />
+                        <Input placeholder={t.typeMessage} className="flex-1" />
                         <Button size="icon">
                           <Send className="h-4 w-4" />
                         </Button>
                       </div>
                       <p className="text-xs text-muted-foreground mt-2">
-                        All messages are confidential and moderated for safety.
+                        {t.messagesConfidential}
                       </p>
                     </div>
                   </div>
                 </CardContent>
                 <CardFooter className="flex justify-between mt-4">
-                  <Button variant="outline">View Other Forums</Button>
-                  <Button>Join Discussion</Button>
+                  <Button variant="outline">{t.viewOtherForums}</Button>
+                  <Button>{t.joinDiscussion}</Button>
                 </CardFooter>
               </Card>
             </div>
@@ -144,71 +227,71 @@ export default function SupportPage() {
             <div>
               <Card>
                 <CardHeader>
-                  <CardTitle>Available Forums</CardTitle>
-                  <CardDescription>Join specialized support groups</CardDescription>
+                  <CardTitle>{t.availableForums}</CardTitle>
+                  <CardDescription>{t.joinGroups}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-3">
                     <div className="flex items-center justify-between p-3 bg-emerald-50 dark:bg-emerald-950 rounded-lg border border-emerald-200 dark:border-emerald-800">
                       <div className="flex items-center gap-2">
                         <Users className="h-4 w-4 text-emerald-600" />
-                        <span className="font-medium">Parents Support</span>
+                        <span className="font-medium">{t.parentsSupportGroup}</span>
                       </div>
-                      <Badge>Active</Badge>
+                      <Badge>{t.active}</Badge>
                     </div>
 
                     <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
                       <div className="flex items-center gap-2">
                         <Users className="h-4 w-4 text-blue-600" />
-                        <span className="font-medium">Teens (13-17)</span>
+                        <span className="font-medium">{t.teens}</span>
                       </div>
-                      <Badge>Active</Badge>
+                      <Badge>{t.active}</Badge>
                     </div>
 
                     <div className="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-950 rounded-lg border border-purple-200 dark:border-purple-800">
                       <div className="flex items-center gap-2">
                         <Users className="h-4 w-4 text-purple-600" />
-                        <span className="font-medium">Children (8-12)</span>
+                        <span className="font-medium">{t.children}</span>
                       </div>
-                      <Badge>Active</Badge>
+                      <Badge>{t.active}</Badge>
                     </div>
 
                     <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border">
                       <div className="flex items-center gap-2">
                         <Users className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">Educators</span>
+                        <span className="font-medium">{t.educators}</span>
                       </div>
-                      <Badge variant="outline">Coming Soon</Badge>
+                      <Badge variant="outline">{t.comingSoon}</Badge>
                     </div>
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button className="w-full">Create Account to Join</Button>
+                  <Button className="w-full">{t.createAccount}</Button>
                 </CardFooter>
               </Card>
 
               <Card className="mt-6">
                 <CardHeader>
-                  <CardTitle>Forum Guidelines</CardTitle>
-                  <CardDescription>Rules for safe and supportive discussions</CardDescription>
+                  <CardTitle>{t.forumGuidelines}</CardTitle>
+                  <CardDescription>{t.guidelinesDescription}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <div className="flex items-start gap-2">
                       <Shield className="h-4 w-4 text-emerald-600 mt-0.5" />
-                      <p className="text-sm">Respect privacy and confidentiality of all members</p>
+                      <p className="text-sm">{t.respectPrivacy}</p>
                     </div>
                     <div className="flex items-start gap-2">
                       <Shield className="h-4 w-4 text-emerald-600 mt-0.5" />
-                      <p className="text-sm">Be supportive and non-judgmental in all interactions</p>
+                      <p className="text-sm">{t.beSupportive}</p>
                     </div>
                     <div className="flex items-start gap-2">
                       <Shield className="h-4 w-4 text-emerald-600 mt-0.5" />
-                      <p className="text-sm">Report any concerning content to moderators</p>
+                      <p className="text-sm">{t.reportContent}</p>
                     </div>
                     <div className="flex items-start gap-2">
                       <Shield className="h-4 w-4 text-emerald-600 mt-0.5" />
-                      <p className="text-sm">Do not share personal identifying information</p>
+                      <p className="text-sm">{t.noPersonalInfo}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -222,10 +305,10 @@ export default function SupportPage() {
             <Card>
               <CardHeader className="space-y-1">
                 <div className="flex justify-between items-start">
-                  <CardTitle className="text-lg">Child Psychologist</CardTitle>
-                  <Badge className="bg-green-500">Available</Badge>
+                  <CardTitle className="text-lg">{t.childPsychologist}</CardTitle>
+                  <Badge className="bg-green-500">{t.available}</Badge>
                 </div>
-                <CardDescription>Specialized in child trauma and recovery</CardDescription>
+                <CardDescription>{t.specializedIn}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-4">
@@ -243,16 +326,10 @@ export default function SupportPage() {
                 </div>
                 <Separator />
                 <div className="space-y-2">
-                  <h4 className="text-sm font-medium">Specializations:</h4>
+                  <h4 className="text-sm font-medium">{t.specializations}:</h4>
                   <div className="flex flex-wrap gap-2">
                     <Badge variant="outline" className="text-xs">
-                      Trauma Recovery
-                    </Badge>
-                    <Badge variant="outline" className="text-xs">
-                      Anxiety
-                    </Badge>
-                    <Badge variant="outline" className="text-xs">
-                      Behavioral Issues
+                      {t.traumaRecovery}
                     </Badge>
                   </div>
                 </div>
