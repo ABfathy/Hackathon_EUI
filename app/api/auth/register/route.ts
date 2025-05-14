@@ -138,8 +138,23 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     console.error("Registration error:", error)
+    
+    // Get a meaningful error message
+    let errorMessage = "Internal server error";
+    
+    if (error instanceof Error) {
+      // Send the actual error message for better client-side debugging
+      errorMessage = error.message;
+      
+      // Handle specific error cases
+      if (error.message.includes("Unique constraint failed")) {
+        errorMessage = "An account with this email already exists";
+        return NextResponse.json({ error: errorMessage }, { status: 409 });
+      }
+    }
+    
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: errorMessage },
       { status: 500 }
     )
   }

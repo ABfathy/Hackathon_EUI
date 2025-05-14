@@ -120,7 +120,13 @@ export default function RegisterPage() {
         })
       })
 
-      const data = await response.json()
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        // Handle JSON parsing errors
+        throw new Error("Failed to parse registration response");
+      }
 
       if (!response.ok) {
         // Safe access of data.error to prevent undefined errors
@@ -147,24 +153,31 @@ export default function RegisterPage() {
         router.push("/login?registered=true")
       }, 2000)
     } catch (error) {
-      toast({
-        title: t.error,
-        description: error instanceof Error ? error.message : "Registration failed",
-        variant: "destructive"
-      })
-      
-      // Log more details about the error to help with troubleshooting
       console.error("Registration error details:", error);
       
-      // If the error contains a specific message about parent not found, provide clearer guidance
-      if (error instanceof Error && error.message.includes("Parent account")) {
-        toast({
-          title: t.error,
-          description: "The parent email you provided is not registered as a parent account. Please ensure the parent registers first.",
-          variant: "destructive",
-          duration: 6000
-        });
+      // Default error message
+      let errorDescription = "Registration failed. Please try again.";
+      
+      // Extract more specific error message if available
+      if (error instanceof Error) {
+        errorDescription = error.message;
+        
+        // Provide clearer guidance for specific error cases
+        if (error.message.includes("Parent account")) {
+          errorDescription = "The parent email you provided is not registered as a parent account. Please ensure the parent registers first.";
+        } else if (error.message.includes("already exists") || error.message.includes("already taken")) {
+          errorDescription = "An account with this email already exists. Please try logging in or use a different email.";
+        } else if (error.message.includes("invalid") && error.message.includes("email")) {
+          errorDescription = "Please enter a valid email address.";
+        }
       }
+      
+      toast({
+        title: t.error,
+        description: errorDescription,
+        variant: "destructive",
+        duration: 6000
+      })
     } finally {
       setIsLoading(false)
     }
