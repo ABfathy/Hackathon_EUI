@@ -1,0 +1,86 @@
+/* AI Chat component styles */
+
+.chat-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+}
+
+.chat-container::-webkit-scrollbar-thumb {
+  background: rgba(128, 90, 213, 0.3);
+  border-radius: 10px;
+}
+
+.chat-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(128, 90, 213, 0.5);
+}
+
+/* Message styling */
+.message-content {
+  line-height: 1.6;
+}
+
+.message-content pre {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 6px;
+  padding: 12px;
+  overflow-x: auto;
+  margin: 8px 0;
+}
+
+.message-content code {
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.message-content ul, 
+.message-content ol {
+  padding-left: 20px;
+  margin: 8px 0;
+}
+
+.message-content ul li,
+.message-content ol li {
+  margin-bottom: 4px;
+}
+
+.message-content a {
+  color: #805AD5;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+.message-content a:hover {
+  text-decoration-thickness: 2px;
+}
+
+/* Dark mode adjustments */
+.dark .message-content pre {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.dark .message-content code {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Animation durations */
+.animate-in {
+  animation-duration: 0.3s;
+}
+
+/* RTL support for Arabic */
+[dir="rtl"] .chat-container {
+  text-align: right;
+}
+
+[dir="rtl"] .message-content ul,
+[dir="rtl"] .message-content ol {
+  padding-right: 20px;
+  padding-left: 0;
+}

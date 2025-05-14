@@ -86,19 +86,19 @@ export default function AIAssistantPage() {
                     <Lightbulb className="h-5 w-5 text-amber-500" />
                     {language === "en" ? "Try asking about" : "جرب السؤال عن"}
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {suggestedQuestions[language === "en" ? "en" : "ar"].map((question, index) => (
                         <Button 
                             key={index}
                             variant="outline" 
-                            className="justify-start text-left h-auto py-3 px-4 bg-white dark:bg-gray-800 shadow-sm hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors"
+                            className="justify-start text-left h-auto py-3 px-4 bg-white dark:bg-gray-800 shadow-sm"
                             onClick={() => setUserQuery(question.text)}
                         >
                             <div className="flex items-start gap-3 w-full">
-                                <div className="flex-shrink-0 mt-1">
+                                <div className="flex-shrink-0 mt-0.5">
                                     {question.icon}
                                 </div>
-                                <span className="text-sm overflow-hidden overflow-ellipsis line-clamp-2">{question.text}</span>
+                                <span className="text-sm line-clamp-2">{question.text}</span>
                             </div>
                         </Button>
                     ))}
