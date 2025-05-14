@@ -6,13 +6,16 @@ import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { BookOpen, Play, Award, VolumeX, Volume2, Sparkles, Wind, Users, Baby, School, GraduationCap } from "lucide-react"
 import { useLanguage } from "@/context/language-context"
+import { useUser } from "@/context/user-context"
 import Link from "next/link"
+import { useState, useEffect } from "react"
 
 const translations = {
   en: {
     title: "Educational Resources",
     description: "Access fun, age-appropriate courses and interactive lessons for both parents and children.",
     startLearning: "Start Learning",
+    completeProfilePrompt: "Please complete your profile by providing your date of birth to access these resources.",
     tabs: {
       parents: "For Parents",
       children: "For Children"
@@ -110,6 +113,7 @@ const translations = {
     title: "الموارد التعليمية",
     description: "الوصول إلى دورات ممتعة ودروس تفاعلية مناسبة للعمر لكل من الآباء والأطفال.",
     startLearning: "ابدأ التعلم",
+    completeProfilePrompt: "يرجى إكمال ملفك الشخصي بتقديم تاريخ ميلادك للوصول إلى هذه الموارد.",
     tabs: {
       parents: "للآباء",
       children: "للأطفال"
@@ -205,9 +209,52 @@ const translations = {
   }
 }
 
+const calculateAge = (dobString: string | null): number | null => {
+  if (!dobString) return null;
+  try {
+    const birthDate = new Date(dobString);
+    if (isNaN(birthDate.getTime())) return null; 
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age >= 0 ? age : null; 
+  } catch (e) {
+    return null; 
+  }
+};
+
 export default function EducationalResourcesPage() {
   const { language } = useLanguage()
   const t = translations[language]
+  const { userType, age } = useUser()
+
+  const isAgeGroupVisible = (ageGroupTitle: string, currentChildAge: number | null) => {
+    if (userType !== "CHILD" || typeof currentChildAge !== 'number') {
+      return false; 
+    }
+    if (ageGroupTitle.includes("4-7") && currentChildAge >= 4 && currentChildAge <= 7) return true;
+    if (ageGroupTitle.includes("8-12") && currentChildAge >= 8 && currentChildAge <= 12) return true;
+    if (ageGroupTitle.includes("13-17") && currentChildAge >= 13 && currentChildAge <= 17) return true;
+    return false;
+  };
+
+  const defaultTab = userType === "PARENT" ? "parents" : "children"
+  const showChildrenContent = userType === "PARENT" || (userType === "CHILD" && age !== null)
+  const showChildIncompleteProfilePrompt = userType === "CHILD" && age === null
+  
+  if (userType === null && age === null) {
+    return (
+      <div className="space-y-8">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight">{t.title}</h1>
+          <p className="text-muted-foreground">Please log in to view resources.</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-8">
@@ -216,54 +263,81 @@ export default function EducationalResourcesPage() {
         <p className="text-muted-foreground">{t.description}</p>
       </div>
 
-      <Tabs defaultValue="parents" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="parents">{t.tabs.parents}</TabsTrigger>
+      <Tabs defaultValue={defaultTab} className="w-full" key={defaultTab}>
+        <TabsList className={`grid w-full ${userType === "PARENT" ? 'grid-cols-2' : 'grid-cols-1'}`}>
+          {userType === "PARENT" && (
+            <TabsTrigger value="parents">{t.tabs.parents}</TabsTrigger>
+          )}
           <TabsTrigger value="children">{t.tabs.children}</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="parents" className="space-y-6">
-          <div className="space-y-4">
-            <h2 className="text-2xl font-semibold">{t.ageGroups.parents.title}</h2>
-            <p className="text-muted-foreground">{t.ageGroups.parents.description}</p>
-          </div>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {t.ageGroups.parents.groups.map((group, index) => (
-              <Link key={index} href={group.href}>
-                <Card className="h-full hover:border-purple-300 dark:hover:border-gray-600 transition-colors">
-                  <CardHeader>
-                    <div className="bg-purple-100 dark:bg-gray-800/50 p-2 rounded-full w-fit">
-                      {group.icon}
-                    </div>
-                    <CardTitle className="mt-4">{group.title}</CardTitle>
-                    <CardDescription>{group.description}</CardDescription>
-                  </CardHeader>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        </TabsContent>
+        {userType === "PARENT" && (
+          <TabsContent value="parents" className="space-y-6">
+            <div className="space-y-4">
+              <h2 className="text-2xl font-semibold">{t.ageGroups.parents.title}</h2>
+              <p className="text-muted-foreground">{t.ageGroups.parents.description}</p>
+            </div>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+              {t.ageGroups.parents.groups.map((group, index) => (
+                <Link key={index} href={group.href}>
+                  <Card className="h-full hover:border-purple-300 dark:hover:border-gray-600 transition-colors">
+                    <CardHeader>
+                      <div className="bg-purple-100 dark:bg-gray-800/50 p-2 rounded-full w-fit">
+                        {group.icon}
+                      </div>
+                      <CardTitle className="mt-4">{group.title}</CardTitle>
+                      <CardDescription>{group.description}</CardDescription>
+                    </CardHeader>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </TabsContent>
+        )}
 
         <TabsContent value="children" className="space-y-6">
-          <div className="space-y-4">
-            <h2 className="text-2xl font-semibold">{t.ageGroups.children.title}</h2>
-            <p className="text-muted-foreground">{t.ageGroups.children.description}</p>
-          </div>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {t.ageGroups.children.groups.map((group, index) => (
-              <Link key={index} href={group.href}>
-                <Card className="h-full hover:border-purple-300 dark:hover:border-gray-600 transition-colors">
-                  <CardHeader>
-                    <div className="bg-purple-100 dark:bg-gray-800/50 p-2 rounded-full w-fit">
-                      {group.icon}
-                    </div>
-                    <CardTitle className="mt-4">{group.title}</CardTitle>
-                    <CardDescription>{group.description}</CardDescription>
-                  </CardHeader>
-                </Card>
-              </Link>
-            ))}
-          </div>
+          {showChildIncompleteProfilePrompt && (
+            <Card className="border-orange-200 dark:border-orange-700">
+              <CardHeader>
+                <CardTitle className="text-orange-600">{language === "en" ? "Action Required" : "إجراء مطلوب"}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>{t.completeProfilePrompt}</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {showChildrenContent && (
+            <>
+              <div className="space-y-4">
+                <h2 className="text-2xl font-semibold">{t.ageGroups.children.title}</h2>
+                <p className="text-muted-foreground">
+                  {userType === "CHILD" && age !== null
+                    ? (language === "en" ? `Showing resources suitable for your age (${age}).` : `عرض الموارد المناسبة لعمرك (${age}).`)
+                    : t.ageGroups.children.description} 
+                </p>
+              </div>
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {t.ageGroups.children.groups.filter(group => {
+                  if (userType === "PARENT") return true; 
+                  if (userType === "CHILD" && age !== null) return isAgeGroupVisible(group.title, age);
+                  return false; 
+                }).map((group, index) => (
+                  <Link key={index} href={group.href}>
+                    <Card className="h-full hover:border-purple-300 dark:hover:border-gray-600 transition-colors">
+                      <CardHeader>
+                        <div className="bg-purple-100 dark:bg-gray-800/50 p-2 rounded-full w-fit">
+                          {group.icon}
+                        </div>
+                        <CardTitle className="mt-4">{group.title}</CardTitle>
+                        <CardDescription>{group.description}</CardDescription>
+                      </CardHeader>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            </>
+          )}
         </TabsContent>
       </Tabs>
 

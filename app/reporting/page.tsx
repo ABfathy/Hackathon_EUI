@@ -12,6 +12,8 @@ import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { AlertTriangle, CheckCircle, Clock, ExternalLink, FileText, Info, Phone, Wind } from "lucide-react"
 import { useLanguage } from "@/context/language-context"
+// Placeholder: Import your actual useUser hook
+// import { useUser } from "@/context/user-context"; 
 
 const translations = {
   en: {
@@ -19,7 +21,7 @@ const translations = {
     subtitle: "Report incidents anonymously and access real-time monitoring and alert systems.",
     emergencyHotline: "Emergency Hotline",
     emergencyDescription: "For immediate assistance in emergency situations, please call the national child protection hotline.",
-    callButton: "Call 1-800-422-4453",
+    callButton: "Call 16000",
     reportIncident: "Report Incident",
     alertSystem: "Alert System",
     reportingGuide: "Reporting Guide",
@@ -70,7 +72,7 @@ const translations = {
     subtitle: "قم بالإبلاغ عن الحوادث بشكل مجهول والوصول إلى أنظمة المراقبة والتنبيه في الوقت الفعلي.",
     emergencyHotline: "خط الطوارئ",
     emergencyDescription: "للحصول على مساعدة فورية في حالات الطوارئ، يرجى الاتصال بخط حماية الطفل الوطني.",
-    callButton: "اتصل بـ 1-800-422-4453",
+    callButton: "اتصل بـ 16000",
     reportIncident: "الإبلاغ عن حادث",
     alertSystem: "نظام التنبيه",
     reportingGuide: "دليل الإبلاغ",
@@ -114,13 +116,39 @@ const translations = {
     stepByStep: "دليل الإبلاغ خطوة بخطوة",
     guideDescription: "كيفية الإبلاغ عن الحوادث للسلطات أو خدمات الطوارئ",
     step1: "تقييم الموقف",
-    step1Description: "تحديد ما إذا كان الطفل في خطر فوري. إذا كان الأمر كذلك، اتصل بخدمات الطوارئ فوراً على 911."
+    step1Description: "تحديد ما إذا كان الطفل في خطر فوري. إذا كان الأمر كذلك، اتصل بخدمات الطوارئ فوراً على 16000."
   }
 }
 
 export default function ReportingPage() {
   const { language } = useLanguage()
   const t = translations[language]
+
+  // Placeholder: Replace with your actual user data from useUser()
+  // The useUser() hook would fetch user data and calculate age for children.
+  // Example structure for a parent:
+  // const user = { userType: 'PARENT', phoneNumber: '1234567890', parentEmail: 'parent@example.com', age: null };
+  // Example structure for a child (age calculated from dateOfBirth by useUser):
+  const user = { userType: 'CHILD', age: 7 }; // Assuming age is calculated and provided
+
+  // Define age-specific content for the reporting guide
+  const getAgeSpecificStep1Description = () => {
+    if (user.userType === 'CHILD') {
+      if (typeof user.age === 'number') {
+        if (user.age <= 8) {
+          return language === 'en' ? "If you feel unsafe, tell a grown-up you trust right away, like a parent or teacher. They can help call for help if needed." : "إذا شعرت بعدم الأمان، أخبر شخصًا بالغًا تثق به على الفور، مثل أحد الوالدين أو المعلم. يمكنهم المساعدة في طلب المساعدة إذا لزم الأمر.";
+        } else if (user.age <= 12) {
+          return language === 'en' ? "If you or another child is in danger, find a trusted adult immediately. You can also call 16000 with their help if it's an emergency." : "إذا كنت أنت أو طفل آخر في خطر، ابحث عن شخص بالغ موثوق به على الفور. يمكنك أيضًا الاتصال بالرقم 16000 بمساعدتهم إذا كانت حالة طارئة.";
+        } else {
+          return language === 'en' ? "If you witness or experience a dangerous situation, ensure your safety first, then report to a trusted adult or call emergency services (16000)." : "إذا شاهدت أو تعرضت لموقف خطير، تأكد من سلامتك أولاً، ثم أبلغ شخصًا بالغًا موثوقًا به أو اتصل بخدمات الطوارئ (16000).";
+        }
+      } else {
+        // Default message for child if age is not available for some reason
+        return language === 'en' ? "If you are in danger, tell a trusted adult immediately." : "إذا كنت في خطر، أخبر شخصًا بالغًا موثوقًا به على الفور.";
+      }
+    }
+    return t.step1Description; // Default for parents
+  };
 
   return (
     <div className="container mx-auto space-y-8 max-w-6xl">
@@ -149,9 +177,11 @@ export default function ReportingPage() {
       </Card>
 
       <Tabs defaultValue="report" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className={`grid w-full ${user.userType === 'PARENT' ? 'grid-cols-3' : 'grid-cols-2'}`}>
           <TabsTrigger value="report">{t.reportIncident}</TabsTrigger>
-          <TabsTrigger value="alerts">{t.alertSystem}</TabsTrigger>
+          {user.userType === 'PARENT' && (
+            <TabsTrigger value="alerts">{t.alertSystem}</TabsTrigger>
+          )}
           <TabsTrigger value="guide">{t.reportingGuide}</TabsTrigger>
         </TabsList>
 
@@ -222,112 +252,114 @@ export default function ReportingPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="alerts" className="space-y-6 pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>{t.recentAlerts}</CardTitle>
-                <CardDescription>{t.alertsDescription}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-4">
-                  <div className="flex items-start gap-4 p-3 bg-red-50 dark:bg-red-950 rounded-lg border border-red-200 dark:border-red-800">
-                    <AlertTriangle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-medium">{t.highPriority}</h4>
-                        <Badge variant="destructive" className="text-xs">
-                          {t.new}
-                        </Badge>
+        {user.userType === 'PARENT' && (
+          <TabsContent value="alerts" className="space-y-6 pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t.recentAlerts}</CardTitle>
+                  <CardDescription>{t.alertsDescription}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-4 p-3 bg-red-50 dark:bg-red-950 rounded-lg border border-red-200 dark:border-red-800">
+                      <AlertTriangle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-medium">{t.highPriority}</h4>
+                          <Badge variant="destructive" className="text-xs">
+                            {t.new}
+                          </Badge>
+                        </div>
+                        <p className="text-sm">{t.alert1}</p>
+                        <p className="text-xs text-muted-foreground">May 13, 2025 - 2:45 PM</p>
                       </div>
-                      <p className="text-sm">{t.alert1}</p>
-                      <p className="text-xs text-muted-foreground">May 13, 2025 - 2:45 PM</p>
                     </div>
-                  </div>
 
-                  <div className="flex items-start gap-4 p-3 bg-amber-50 dark:bg-amber-950 rounded-lg border border-amber-200 dark:border-amber-800">
-                    <Clock className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-medium">{t.communityNotice}</h4>
+                    <div className="flex items-start gap-4 p-3 bg-amber-50 dark:bg-amber-950 rounded-lg border border-amber-200 dark:border-amber-800">
+                      <Clock className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-medium">{t.communityNotice}</h4>
+                        </div>
+                        <p className="text-sm">{t.alert2}</p>
+                        <p className="text-xs text-muted-foreground">May 12, 2025 - 10:30 AM</p>
                       </div>
-                      <p className="text-sm">{t.alert2}</p>
-                      <p className="text-xs text-muted-foreground">May 12, 2025 - 10:30 AM</p>
                     </div>
-                  </div>
 
-                  <div className="flex items-start gap-4 p-3 bg-emerald-50 dark:bg-emerald-950 rounded-lg border border-emerald-200 dark:border-emerald-800">
-                    <CheckCircle className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-medium">{t.resolved}</h4>
+                    <div className="flex items-start gap-4 p-3 bg-emerald-50 dark:bg-emerald-950 rounded-lg border border-emerald-200 dark:border-emerald-800">
+                      <CheckCircle className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-medium">{t.resolved}</h4>
+                        </div>
+                        <p className="text-sm">{t.alert3}</p>
+                        <p className="text-xs text-muted-foreground">May 10, 2025 - 5:15 PM</p>
                       </div>
-                      <p className="text-sm">{t.alert3}</p>
-                      <p className="text-xs text-muted-foreground">May 10, 2025 - 5:15 PM</p>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button variant="outline" className="w-full">
-                  {t.viewAllAlerts}
-                </Button>
-              </CardFooter>
-            </Card>
+                </CardContent>
+                <CardFooter>
+                  <Button variant="outline" className="w-full">
+                    {t.viewAllAlerts}
+                  </Button>
+                </CardFooter>
+              </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>{t.alertSettings}</CardTitle>
-                <CardDescription>{t.settingsDescription}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label className="text-base">{t.pushNotifications}</Label>
-                      <p className="text-sm text-muted-foreground">{t.pushDescription}</p>
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t.alertSettings}</CardTitle>
+                  <CardDescription>{t.settingsDescription}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label className="text-base">{t.pushNotifications}</Label>
+                        <p className="text-sm text-muted-foreground">{t.pushDescription}</p>
+                      </div>
+                      <Switch />
                     </div>
-                    <Switch />
-                  </div>
-                  <Separator />
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label className="text-base">{t.emailAlerts}</Label>
-                      <p className="text-sm text-muted-foreground">{t.emailDescription}</p>
+                    <Separator />
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label className="text-base">{t.emailAlerts}</Label>
+                        <p className="text-sm text-muted-foreground">{t.emailDescription}</p>
+                      </div>
+                      <Switch />
                     </div>
-                    <Switch />
-                  </div>
-                  <Separator />
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label className="text-base">{t.smsNotifications}</Label>
-                      <p className="text-sm text-muted-foreground">{t.smsDescription}</p>
+                    <Separator />
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label className="text-base">{t.smsNotifications}</Label>
+                        <p className="text-sm text-muted-foreground">{t.smsDescription}</p>
+                      </div>
+                      <Switch />
                     </div>
-                    <Switch />
-                  </div>
-                  <Separator />
-                  <div className="space-y-2">
-                    <Label>{t.alertRadius}</Label>
-                    <div className="grid grid-cols-3 gap-2">
-                      <Button variant="outline" size="sm">
-                        1 km
-                      </Button>
-                      <Button variant="outline" size="sm" className="bg-emerald-50 border-emerald-200">
-                        5 km
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        10 km
-                      </Button>
+                    <Separator />
+                    <div className="space-y-2">
+                      <Label>{t.alertRadius}</Label>
+                      <div className="grid grid-cols-3 gap-2">
+                        <Button variant="outline" size="sm">
+                          1 km
+                        </Button>
+                        <Button variant="outline" size="sm" className="bg-emerald-50 border-emerald-200">
+                          5 km
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          10 km
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button className="w-full">{t.savePreferences}</Button>
-              </CardFooter>
-            </Card>
-          </div>
-        </TabsContent>
+                </CardContent>
+                <CardFooter>
+                  <Button className="w-full">{t.savePreferences}</Button>
+                </CardFooter>
+              </Card>
+            </div>
+          </TabsContent>
+        )}
 
         <TabsContent value="guide" className="space-y-6 pt-6">
           <Card>
@@ -344,7 +376,7 @@ export default function ReportingPage() {
                   <div className="space-y-1">
                     <h4 className="font-medium">{t.step1}</h4>
                     <p className="text-sm text-muted-foreground">
-                      {t.step1Description}
+                      {getAgeSpecificStep1Description()}
                     </p>
                   </div>
                 </div>

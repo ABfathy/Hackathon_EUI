@@ -136,6 +136,31 @@ export default function Sidebar() {
     )
   }
 
+  const renderTestUserStatus = () => {
+    if (!userType) return null;
+
+    return (
+      <>
+        <div className="p-2 my-2 text-sm text-center text-white bg-purple-600 rounded-md">
+          Logged in as: {userType}
+          {userType === "CHILD" && age !== null && ` (Age: ${age})`}
+        </div>
+        <Button
+          variant="outline"
+          onClick={() => {
+            logout();
+            // Optionally navigate to login or home after logout
+            // router.push('/login'); 
+          }}
+          className="w-full flex items-center gap-2 rounded-xl h-12 text-base border-purple-200 dark:border-gray-700"
+        >
+          <LogOut className="h-5 w-5 text-purple-600 dark:text-gray-300" />
+          <span className="truncate">{language === "en" ? "Logout Test User" : "تسجيل خروج المستخدم التجريبي"}</span>
+        </Button>
+      </>
+    );
+  };
+
   return (
     <>
       {/* Mobile Navigation */}
@@ -191,7 +216,8 @@ export default function Sidebar() {
               </div>
             </ScrollArea>
             <div className="px-4 flex flex-col gap-2">
-              {renderAuthButtons()}
+              {renderTestUserStatus()}
+              {!userType && renderAuthButtons()}
               <Button variant="outline" className="w-full flex items-center gap-2 rounded-xl h-12 text-base border-purple-200 dark:border-gray-700">
                 <Bot className="h-5 w-5 text-purple-600 dark:text-gray-300" />
                 <span className="truncate">{language === "en" ? "AI Assistant" : "المساعد الذكي"}</span>
@@ -259,7 +285,8 @@ export default function Sidebar() {
           </nav>
         </ScrollArea>
         <div className="p-4 space-y-2 border-t border-gray-200 dark:border-gray-700">
-          {renderAuthButtons()}
+          {renderTestUserStatus()}
+          {!userType && renderAuthButtons()}
           <Button variant="outline" className="w-full flex items-center gap-2 rounded-xl h-12 text-base border-gray-200 dark:border-gray-700">
             <Bot className="h-5 w-5 text-gray-700 dark:text-gray-300" />
             <span>{language === "en" ? "AI Assistant" : "المساعد الذكي"}</span>
