@@ -17,19 +17,74 @@ cd Hackathon_EUI
 npm install -g pnpm
 ```
 
-### 3. Install Dependencies
+### 3. Run the Setup Script (IMPORTANT!)
+
+This step is critical for cross-platform compatibility (Mac/Windows):
 
 ```bash
-pnpm install
+node setup.js
 ```
 
-### 4. Run the Development Server
+This script will:
+- Check and create environment files
+- Clean existing Prisma generated files
+- Update the Prisma schema if needed
+- Generate Prisma client for your platform
+- Check dependencies
+
+### 4. Configure Your Environment
+
+Update the `.env` file with your database connection:
+
+```
+# For Windows users (typically)
+DATABASE_URL="postgresql://postgres:yourpassword@localhost:5432/nismah?schema=public"
+
+# For Mac users (if using a different username)
+DATABASE_URL="postgresql://yourusername:yourpassword@localhost:5432/nismah?schema=public"
+```
+
+### 5. Run the Development Server
 
 ```bash
 pnpm dev
 ```
 
 Visit `http://localhost:3000` in your browser.
+
+## Troubleshooting
+
+### Prisma Client Errors
+
+If you encounter Prisma initialization errors like:
+
+```
+PrismaClientInitializationError: Prisma Client could not locate the Query Engine for runtime "windows"
+```
+
+Try these steps:
+
+1. Make sure you've run the setup script:
+   ```bash
+   node setup.js
+   ```
+
+2. If the error persists, manually regenerate the Prisma client:
+   ```bash
+   npx prisma generate
+   ```
+
+3. Check that your database is running and accessible with the credentials in your `.env` file
+
+4. For Windows users, ensure you have PostgreSQL installed and running as a service
+
+### Database Connection Issues
+
+1. Verify your PostgreSQL installation is running
+2. Check the port number in your connection string (default is 5432)
+3. Ensure your username and password are correct
+4. For Windows users, the default username is often `postgres`
+5. Try connecting to the database using a tool like pgAdmin to verify credentials
 
 ## File Overview
 
