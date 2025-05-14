@@ -161,8 +161,8 @@ export default function HomePage() {
               </h3>
               <p className="text-muted-foreground">
                 {language === "en"
-                  ? "Our friendly voice-guided AI assistant provides age-appropriate safety tips and fun guidance for children."
-                  : "يقدم مساعدنا الذكي الاصطناعي الودود بالتوجيه الصوتي نصائح أمان مناسبة للعمر وإرشادات ممتعة للأطفال."}
+                  ? "Our friendly AI assistant provides age-appropriate safety tips and fun guidance for children."
+                  : "يقدم مساعدنا الذكي الاصطناعي الودود نصائح أمان مناسبة للعمر وإرشادات ممتعة للأطفال."}
               </p>
             </div>
             <Link href="/ai-assistant">
