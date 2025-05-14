@@ -6,6 +6,20 @@ import {
   type ThemeProviderProps,
 } from 'next-themes'
 
-export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
-  return <NextThemesProvider {...props}>{children}</NextThemesProvider>
+export function ThemeProvider({ 
+  children, 
+  storageKey = 'theme',
+  defaultTheme = 'system',
+  ...props 
+}: ThemeProviderProps) {
+  return (
+    <NextThemesProvider 
+      storageKey={storageKey}
+      defaultTheme={defaultTheme}
+      enableSystem
+      {...props}
+    >
+      {children}
+    </NextThemesProvider>
+  )
 }

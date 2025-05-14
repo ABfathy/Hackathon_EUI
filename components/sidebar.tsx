@@ -79,8 +79,19 @@ export default function Sidebar() {
     try {
       setIsSigningOut(true)
       
-      // Clear local storage and session storage
-      localStorage.clear();
+      // Save theme preference before clearing storage
+      const themePreference = localStorage.getItem('theme');
+      
+      // Clear localStorage and sessionStorage except theme preference
+      // Instead of clearing everything, selectively remove auth-related items
+      for (const key in localStorage) {
+        // Skip theme-related keys
+        if (key !== 'theme' && !key.includes('theme')) {
+          localStorage.removeItem(key);
+        }
+      }
+      
+      // Clear session storage
       sessionStorage.clear();
       
       // Sign out with callbackUrl to ensure proper redirection
@@ -88,6 +99,11 @@ export default function Sidebar() {
         redirect: false,
         callbackUrl: '/login'
       });
+      
+      // Restore theme preference if it existed
+      if (themePreference) {
+        localStorage.setItem('theme', themePreference);
+      }
       
       // Show success toast
       toast({
@@ -98,8 +114,6 @@ export default function Sidebar() {
       // Force hard reload to clear any in-memory state
       setTimeout(() => {
         window.location.href = "/login";
-        // Add cache-busting query parameter
-        // window.location.href = "/login?t=" + new Date().getTime();
       }, 500);
     } catch (error) {
       console.error("Sign out error:", error)
