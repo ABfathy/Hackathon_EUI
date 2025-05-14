@@ -139,7 +139,7 @@ export default function CommunityPage() {
       </div>
 
       <Tabs defaultValue="map" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 mb-4">
           <TabsTrigger value="map">{t.localAlertsMap}</TabsTrigger>
           <TabsTrigger value="campaigns">{t.educationCampaigns}</TabsTrigger>
           <TabsTrigger value="events">{t.communityEvents}</TabsTrigger>
@@ -210,9 +210,9 @@ export default function CommunityPage() {
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button variant="outline">{t.filterAlerts}</Button>
-              <Button>{t.reportNewConcern}</Button>
+            <CardFooter className="flex flex-col sm:flex-row gap-2 sm:justify-between">
+              <Button variant="outline" className="w-full sm:w-auto">{t.filterAlerts}</Button>
+              <Button className="w-full sm:w-auto">{t.reportNewConcern}</Button>
             </CardFooter>
           </Card>
         </TabsContent>
@@ -235,12 +235,12 @@ export default function CommunityPage() {
                   {t.signsContent}
                 </p>
               </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button variant="outline" className="flex items-center gap-2">
+              <CardFooter className="flex flex-col sm:flex-row gap-2 sm:justify-between">
+                <Button variant="outline" className="flex items-center gap-2 w-full sm:w-auto">
                   <FileText className="h-4 w-4" />
                   {t.materials}
                 </Button>
-                <Button className="flex items-center gap-2">
+                <Button className="flex items-center gap-2 w-full sm:w-auto">
                   <ExternalLink className="h-4 w-4" />
                   {t.joinCampaign}
                 </Button>
@@ -263,12 +263,12 @@ export default function CommunityPage() {
                   {t.schoolsContent}
                 </p>
               </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button variant="outline" className="flex items-center gap-2">
+              <CardFooter className="flex flex-col sm:flex-row gap-2 sm:justify-between">
+                <Button variant="outline" className="flex items-center gap-2 w-full sm:w-auto">
                   <FileText className="h-4 w-4" />
                   {t.materials}
                 </Button>
-                <Button className="flex items-center gap-2">
+                <Button className="flex items-center gap-2 w-full sm:w-auto">
                   <ExternalLink className="h-4 w-4" />
                   {t.joinCampaign}
                 </Button>
@@ -291,12 +291,12 @@ export default function CommunityPage() {
                   {t.digitalContent}
                 </p>
               </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button variant="outline" disabled className="flex items-center gap-2">
+              <CardFooter className="flex flex-col sm:flex-row gap-2 sm:justify-between">
+                <Button variant="outline" disabled className="flex items-center gap-2 w-full sm:w-auto">
                   <FileText className="h-4 w-4" />
                   {t.materials}
                 </Button>
-                <Button disabled className="flex items-center gap-2">
+                <Button disabled className="flex items-center gap-2 w-full sm:w-auto">
                   <Bell className="h-4 w-4" />
                   {t.getNotified}
                 </Button>
@@ -366,12 +366,12 @@ export default function CommunityPage() {
                     <p className="text-center text-muted-foreground">Calendar view would be displayed here</p>
                   </div>
                 </CardContent>
-                <CardFooter className="flex justify-between">
-                  <Button variant="outline" size="sm">
+                <CardFooter className="flex items-center justify-between gap-2">
+                  <Button variant="outline" size="sm" className="px-2 sm:px-3">
                     Previous
                   </Button>
-                  <div className="font-medium">May 2025</div>
-                  <Button variant="outline" size="sm">
+                  <div className="font-medium text-sm sm:text-base">May 2025</div>
+                  <Button variant="outline" size="sm" className="px-2 sm:px-3">
                     Next
                   </Button>
                 </CardFooter>

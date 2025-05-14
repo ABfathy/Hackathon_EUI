@@ -120,7 +120,7 @@ export default function SupportPage() {
       </Card>
 
       <Tabs defaultValue="forums" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 mb-4">
           <TabsTrigger value="forums">{t.supportForums}</TabsTrigger>
           <TabsTrigger value="counseling">{t.expertCounseling}</TabsTrigger>
           <TabsTrigger value="resources">{t.supportResources}</TabsTrigger>
@@ -217,9 +217,9 @@ export default function SupportPage() {
                     </div>
                   </div>
                 </CardContent>
-                <CardFooter className="flex justify-between mt-4">
-                  <Button variant="outline">{t.viewOtherForums}</Button>
-                  <Button>{t.joinDiscussion}</Button>
+                <CardFooter className="flex flex-col sm:flex-row gap-2 sm:justify-between mt-4">
+                  <Button variant="outline" className="w-full sm:w-auto">{t.viewOtherForums}</Button>
+                  <Button className="w-full sm:w-auto">{t.joinDiscussion}</Button>
                 </CardFooter>
               </Card>
             </div>
@@ -334,11 +334,11 @@ export default function SupportPage() {
                   </div>
                 </div>
               </CardContent>
-              <CardFooter className="flex gap-2">
-                <Button variant="outline" className="flex-1">
+              <CardFooter className="flex flex-col sm:flex-row gap-2">
+                <Button variant="outline" className="w-full">
                   View Profile
                 </Button>
-                <Button className="flex-1">Schedule Session</Button>
+                <Button className="w-full">Schedule Session</Button>
               </CardFooter>
             </Card>
 
@@ -380,11 +380,11 @@ export default function SupportPage() {
                   </div>
                 </div>
               </CardContent>
-              <CardFooter className="flex gap-2">
-                <Button variant="outline" className="flex-1">
+              <CardFooter className="flex flex-col sm:flex-row gap-2">
+                <Button variant="outline" className="w-full">
                   View Profile
                 </Button>
-                <Button className="flex-1">Schedule Session</Button>
+                <Button className="w-full">Schedule Session</Button>
               </CardFooter>
             </Card>
 
@@ -426,11 +426,11 @@ export default function SupportPage() {
                   </div>
                 </div>
               </CardContent>
-              <CardFooter className="flex gap-2">
-                <Button variant="outline" className="flex-1">
+              <CardFooter className="flex flex-col sm:flex-row gap-2">
+                <Button variant="outline" className="w-full">
                   View Profile
                 </Button>
-                <Button className="flex-1">Join Waitlist</Button>
+                <Button className="w-full">Join Waitlist</Button>
               </CardFooter>
             </Card>
           </div>
@@ -446,7 +446,7 @@ export default function SupportPage() {
                   Our crisis counselors are available around the clock for urgent situations.
                 </p>
               </div>
-              <Button className="bg-red-600 hover:bg-red-700 text-white">Access Emergency Support</Button>
+              <Button className="bg-red-600 hover:bg-red-700 text-white w-full md:w-auto">Access Emergency Support</Button>
             </CardContent>
           </Card>
         </TabsContent>

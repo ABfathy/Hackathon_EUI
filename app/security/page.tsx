@@ -151,12 +151,12 @@ export default function SecurityPage() {
               {t.securityDescription}
             </p>
           </div>
-          <Button className="bg-amber-600 hover:bg-amber-700 text-white">{t.enable2FA}</Button>
+          <Button className="bg-amber-600 hover:bg-amber-700 text-white w-full md:w-auto">{t.enable2FA}</Button>
         </CardContent>
       </Card>
 
       <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 mb-4">
           <TabsTrigger value="profile">{t.profileVerification}</TabsTrigger>
           <TabsTrigger value="privacy">{t.privacySettings}</TabsTrigger>
           <TabsTrigger value="assistant">{t.aiSettings}</TabsTrigger>

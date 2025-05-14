@@ -36,7 +36,7 @@ export default function RootLayout({
               <Providers>
                 <div className="flex min-h-screen bg-gradient-to-br from-white to-purple-50 dark:from-gray-950 dark:to-purple-950">
                   <Sidebar />
-                  <main className="flex-1 p-6 md:p-8 overflow-y-auto">{children}</main>
+                  <main className="flex-1 pl-14 pr-4 md:px-8 pt-6 pb-6 md:py-8 overflow-y-auto">{children}</main>
                 </div>
                 <Toaster />
               </Providers>

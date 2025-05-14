@@ -316,7 +316,7 @@ export default function EducationalResourcesPage() {
       </div>
 
       <Tabs defaultValue={defaultTab} className="w-full" key={defaultTab}>
-        <TabsList className={`grid w-full ${userType === "PARENT" ? 'grid-cols-2' : 'grid-cols-1'}`}>
+        <TabsList className={`grid w-full ${userType === "PARENT" ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'} mb-4`}>
           {userType === "PARENT" && (
             <TabsTrigger value="parents">{t.tabs.parents}</TabsTrigger>
           )}
