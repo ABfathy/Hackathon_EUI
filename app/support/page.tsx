@@ -7,8 +7,10 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { MessageCircle, Lock, Users, Send, Wind, Info, Video, Search } from "lucide-react"
+import { MessageCircle, Lock, Users, Send, Wind, Info, Video, Search, BookOpen } from "lucide-react"
 import { useLanguage } from "@/context/language-context"
+import { useSession } from "next-auth/react"
+import Link from "next/link"
 
 const translations = {
   en: {
@@ -90,6 +92,50 @@ const translations = {
 export default function SupportPage() {
   const { language } = useLanguage()
   const t = translations[language]
+  const { data: session, status } = useSession()
+  
+  if (status === "loading") {
+    return (
+      <div className="space-y-8">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight">{t.title}</h1>
+          <div className="flex items-center space-x-2 mt-4">
+            <div className="animate-spin h-5 w-5 border-2 border-purple-600 dark:border-purple-400 rounded-full border-t-transparent"></div>
+            <p className="text-muted-foreground">{language === "en" ? "Loading content..." : "جاري تحميل المحتوى..."}</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+  
+  if (status === "unauthenticated" || !session) {
+    return (
+      <div className="space-y-8">
+        <div className="space-y-4">
+          <h1 className="text-3xl font-bold tracking-tight">{t.title}</h1>
+          <p className="text-muted-foreground">{t.subtitle}</p>
+        </div>
+        <Card className="border-purple-200 dark:border-gray-700 max-w-3xl mx-auto">
+          <CardHeader className="bg-gradient-to-r from-purple-50 to-emerald-50 dark:from-gray-800/50 dark:to-gray-800/80 rounded-t-lg">
+            <CardTitle className="text-purple-600 dark:text-gray-200 flex items-center gap-2">
+              <BookOpen className="h-5 w-5" />
+              {language === "en" ? "Access Required" : "مطلوب تسجيل الدخول"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <p className="mb-6">{language === "en" 
+              ? "Please sign in to access our support forums. These forums are only available to authenticated users to ensure a safe and supportive environment."
+              : "يرجى تسجيل الدخول للوصول إلى منتديات الدعم الخاصة بنا. هذه المنتديات متاحة فقط للمستخدمين المصادق عليهم لضمان بيئة آمنة وداعمة."}</p>
+            <Link href="/login">
+              <Button className="w-full sm:w-auto">
+                {language === "en" ? "Sign In" : "تسجيل الدخول"}
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="container mx-auto space-y-8 max-w-6xl">
