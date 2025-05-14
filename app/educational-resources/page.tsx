@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { BookOpen, Play, Award, VolumeX, Volume2, Sparkles, Wind, Users, Baby, School, GraduationCap } from "lucide-react"
+import { BookOpen, Play, Award, VolumeX, Volume2, Sparkles, Wind, Users, Baby, School, GraduationCap, AlertTriangle } from "lucide-react"
 import { useLanguage } from "@/context/language-context"
 import Link from "next/link"
 import { useState, useEffect } from "react"
@@ -217,6 +217,8 @@ export default function EducationalResourcesPage() {
   
   // Calculate age from dateOfBirth if available in Prisma/database
   const [age, setAge] = useState<number | null>(null);
+  const [isAgeLoading, setIsAgeLoading] = useState(false);
+  const [ageDataFetched, setAgeDataFetched] = useState(false);
   const userType = session?.user?.userType || null;
   
   // We'll need to fetch user details including dateOfBirth from an API endpoint
@@ -224,6 +226,7 @@ export default function EducationalResourcesPage() {
     const fetchUserDetails = async () => {
       if (session?.user?.id) {
         try {
+          setIsAgeLoading(true);
           const response = await fetch(`/api/users/${session.user.id}`);
           if (response.ok) {
             const userData = await response.json();
@@ -236,6 +239,9 @@ export default function EducationalResourcesPage() {
           }
         } catch (error) {
           console.error("Error fetching user details:", error);
+        } finally {
+          setIsAgeLoading(false);
+          setAgeDataFetched(true);
         }
       }
     };
@@ -257,14 +263,17 @@ export default function EducationalResourcesPage() {
 
   const defaultTab = userType === "PARENT" ? "parents" : "children"
   const showChildrenContent = userType === "PARENT" || (userType === "CHILD" && age !== null)
-  const showChildIncompleteProfilePrompt = userType === "CHILD" && age === null
+  const showChildIncompleteProfilePrompt = userType === "CHILD" && age === null && ageDataFetched
   
   if (status === "loading") {
     return (
       <div className="space-y-8">
         <div className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">{t.title}</h1>
-          <p className="text-muted-foreground">Loading...</p>
+          <div className="flex items-center space-x-2 mt-4">
+            <div className="animate-spin h-5 w-5 border-2 border-purple-600 dark:border-purple-400 rounded-full border-t-transparent"></div>
+            <p className="text-muted-foreground">{language === "en" ? "Loading content..." : "جاري تحميل المحتوى..."}</p>
+          </div>
         </div>
       </div>
     )
@@ -273,10 +282,28 @@ export default function EducationalResourcesPage() {
   if (status === "unauthenticated" || !session) {
     return (
       <div className="space-y-8">
-        <div className="space-y-2">
+        <div className="space-y-4">
           <h1 className="text-3xl font-bold tracking-tight">{t.title}</h1>
-          <p className="text-muted-foreground">Please log in to view resources.</p>
+          <p className="text-muted-foreground">{t.description}</p>
         </div>
+        <Card className="border-purple-200 dark:border-gray-700 max-w-3xl mx-auto">
+          <CardHeader className="bg-gradient-to-r from-purple-50 to-emerald-50 dark:from-gray-800/50 dark:to-gray-800/80 rounded-t-lg">
+            <CardTitle className="text-purple-600 dark:text-gray-200 flex items-center gap-2">
+              <BookOpen className="h-5 w-5" />
+              {language === "en" ? "Access Required" : "مطلوب تسجيل الدخول"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <p className="mb-6">{language === "en" 
+              ? "Please sign in to access our educational resources. Our content is personalized to your profile and age group."
+              : "يرجى تسجيل الدخول للوصول إلى مواردنا التعليمية. المحتوى لدينا مخصص لملفك الشخصي والفئة العمرية الخاصة بك."}</p>
+            <Link href="/login">
+              <Button className="w-full sm:w-auto">
+                {language === "en" ? "Sign In" : "تسجيل الدخول"}
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
       </div>
     )
   }
@@ -321,25 +348,56 @@ export default function EducationalResourcesPage() {
         )}
 
         <TabsContent value="children" className="space-y-6">
-          {showChildIncompleteProfilePrompt && (
+          {isAgeLoading && userType === "CHILD" && (
+            <div className="flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-800/30 rounded-lg">
+              <div className="flex items-center space-x-2">
+                <div className="animate-spin h-5 w-5 border-2 border-purple-600 dark:border-purple-400 rounded-full border-t-transparent"></div>
+                <p className="text-sm text-muted-foreground">
+                  {language === "en" ? "Loading age-appropriate content..." : "جاري تحميل المحتوى المناسب للعمر..."}
+                </p>
+              </div>
+            </div>
+          )}
+          
+          {!isAgeLoading && showChildIncompleteProfilePrompt && (
             <Card className="border-orange-200 dark:border-orange-700">
               <CardHeader>
-                <CardTitle className="text-orange-600">{language === "en" ? "Action Required" : "إجراء مطلوب"}</CardTitle>
+                <CardTitle className="text-orange-600 flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5" />
+                  {language === "en" ? "Profile Update Needed" : "تحديث الملف الشخصي مطلوب"}
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <p>{t.completeProfilePrompt}</p>
+                <p>{language === "en" 
+                  ? "We need your date of birth to show content appropriate for your age. Please update your profile." 
+                  : "نحتاج إلى تاريخ ميلادك لعرض محتوى مناسب لعمرك. يرجى تحديث ملفك الشخصي."}</p>
+                <div className="mt-4">
+                  <Link href="/profile">
+                    <Button variant="outline" size="sm">
+                      {language === "en" ? "Update Profile" : "تحديث الملف الشخصي"}
+                    </Button>
+                  </Link>
+                </div>
               </CardContent>
             </Card>
           )}
 
-          {showChildrenContent && (
+          {(!isAgeLoading && showChildrenContent) && (
             <>
               <div className="space-y-4">
                 <h2 className="text-2xl font-semibold">{t.ageGroups.children.title}</h2>
+                {userType === "CHILD" && age !== null && (
+                  <div className="flex items-center gap-2 bg-purple-50 dark:bg-gray-800/50 p-3 rounded-lg text-purple-600 dark:text-purple-300 mb-4">
+                    <Sparkles className="h-5 w-5" />
+                    <p>
+                      {language === "en" 
+                        ? `We've automatically personalized content for your age (${age} years old).` 
+                        : `لقد قمنا تلقائيًا بتخصيص المحتوى لعمرك (${age} سنة).`}
+                    </p>
+                  </div>
+                )}
                 <p className="text-muted-foreground">
-                  {userType === "CHILD" && age !== null
-                    ? (language === "en" ? `Showing resources suitable for your age (${age}).` : `عرض الموارد المناسبة لعمرك (${age}).`)
-                    : t.ageGroups.children.description} 
+                  {userType === "PARENT" ? t.ageGroups.children.description : ""} 
                 </p>
               </div>
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
