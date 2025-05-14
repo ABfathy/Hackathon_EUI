@@ -29,73 +29,29 @@ export class GeminiService {
         if (!this.apiKey) {
             throw new Error('Gemini API key is required.');
         }
-    }
-
-    /**
-     * Check and initialize available models
+    }    /**
+     * Initialize models - no longer fetches model list
      */
     private async initializeModels(): Promise<void> {
         if (this.modelInitialized) return;
 
-        try {
-            console.log("Listing available Gemini models...");
-            const response = await fetch(
-                `https://generativelanguage.googleapis.com/v1beta/models?key=${this.apiKey}`,
-                {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                console.error("Failed to list models:", errorData);
-                throw new Error(`Gemini API error: ${errorData.error?.message || 'Unknown error listing models'}`);
-            }
-
-            const data = await response.json();
-            console.log("Available models:", data);
-
-            this.availableModels = data.models?.map((model: any) => model.name) || [];
-            this.modelInitialized = true;
-
-            console.log("Available model names:", this.availableModels);
-        } catch (error) {
-            console.error("Error initializing models:", error);
-            // Continue even if model listing fails - we'll use the default model
-        }
-    }
-
-    /**
+        // Instead of fetching models from the API, we'll just use predefined models
+        // This avoids unnecessary API calls that were filling the console logs
+        this.availableModels = [
+            'models/gemini-1.5-flash',
+            'models/gemini-1.5-pro',
+            'models/gemini-1.0-pro'
+        ];
+        
+        this.modelInitialized = true;
+    }    /**
      * Get the best available model
      */
     private async getBestModel(): Promise<string> {
         await this.initializeModels();
 
-        // If we have models listed, try to find gemini-1.5-flash or closest match
-        if (this.availableModels.length > 0) {
-            // Try best matches first
-            if (this.availableModels.includes('models/gemini-1.5-flash')) {
-                return 'models/gemini-1.5-flash';
-            }
-
-            // Try other gemini 1.5 models
-            const gemini15Model = this.availableModels.find(model => model.includes('gemini-1.5'));
-            if (gemini15Model) {
-                return gemini15Model;
-            }
-
-            // Try any gemini model as last resort
-            const geminiModel = this.availableModels.find(model => model.includes('gemini'));
-            if (geminiModel) {
-                return geminiModel;
-            }
-        }
-
-        // Fall back to default
-        return 'gemini-1.5-flash';
+        // Simply return the preferred model - gemini-1.5-flash
+        return 'models/gemini-1.5-flash';
     }
 
     /**
@@ -111,12 +67,9 @@ export class GeminiService {
 
         try {
             // Add artificial delay before making the API call
-            await delay(3000);
-
-            // Get the best available model
+            await delay(3000);            // Get the best available model
             const modelToUse = await this.getBestModel();
-            console.log(`Using model: ${modelToUse}`);
-
+            
             // Create the full prompt with system message
             const fullPrompt = `${systemMessage}\n\n${prompt}`;
 
@@ -145,12 +98,8 @@ export class GeminiService {
             } else {
                 // If it's just a model name
                 endpoint = `https://generativelanguage.googleapis.com/${apiVersion}/models/${modelToUse}:generateContent`;
-            }
-
-            // Add API key to the endpoint
+            }            // Add API key to the endpoint
             endpoint = `${endpoint}?key=${this.apiKey}`;
-
-            console.log(`Making API request to: ${endpoint}`);
 
             // Make the API request to Gemini
             const response = await fetch(
@@ -161,17 +110,13 @@ export class GeminiService {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify(requestBody),
-                }
-            );
+                }            );
 
             const responseData = await response.json();
-            console.log("API Response:", responseData);
 
             if (!response.ok) {
                 // If this is a deprecated model error, try with gemini-1.5-flash directly
                 if (responseData.error?.message?.includes('deprecated')) {
-                    console.log("Detected deprecated model error, retrying with gemini-1.5-flash");
-
                     // Try directly with gemini-1.5-flash
                     const fallbackEndpoint = `https://generativelanguage.googleapis.com/${apiVersion}/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`;
 
@@ -184,16 +129,10 @@ export class GeminiService {
                             },
                             body: JSON.stringify(requestBody),
                         }
-                    );
-
-                    if (!fallbackResponse.ok) {
+                    );                    if (!fallbackResponse.ok) {
                         const fallbackErrorData = await fallbackResponse.json();
-                        console.error("Fallback request also failed:", fallbackErrorData);
                         throw new Error(`Gemini API error: ${fallbackErrorData.error?.message || 'Unknown error with fallback model'}`);
-                    }
-
-                    const fallbackData = await fallbackResponse.json();
-                    console.log("Fallback API Success Response:", fallbackData);
+                    }const fallbackData = await fallbackResponse.json();
 
                     // Extract the text from the fallback response
                     const fallbackResponseText = fallbackData.candidates?.[0]?.content?.parts?.[0]?.text || '';
@@ -213,9 +152,7 @@ export class GeminiService {
             return {
                 text: responseText,
                 model: modelToUse,
-            };
-        } catch (error) {
-            console.error('Error calling Gemini API:', error);
+            };        } catch (error) {
             throw new Error(`Failed to get AI completion: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
@@ -250,9 +187,7 @@ export class GeminiService {
             return {
                 text: fullText,
                 model: response.model,
-            };
-        } catch (error) {
-            console.error('Error streaming from Gemini API:', error);
+            };        } catch (error) {
             throw new Error(`Failed to stream AI completion: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
