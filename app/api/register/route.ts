@@ -10,7 +10,12 @@ function generateFamilyCode(): string {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { name, email, password, userType: rawUserType, phoneNumber, dateOfBirth, parentEmail, parentPhone } = body
+    let { name, email, password, userType: rawUserType, phoneNumber, dateOfBirth, parentEmail, parentPhone } = body
+    
+    // Normalize email to lowercase
+    if (email) email = email.toLowerCase()
+    // Normalize parent email to lowercase if provided
+    if (parentEmail) parentEmail = parentEmail.toLowerCase()
     
     // Normalize userType to match Prisma enum, handling both uppercase and lowercase
     const userType = rawUserType.toUpperCase() === 'PARENT' ? 'PARENT' : 

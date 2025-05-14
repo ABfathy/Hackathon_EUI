@@ -23,10 +23,7 @@ If you're experiencing the error: `PrismaClientInitializationError: Prisma Clien
    Make sure your .env file includes both DATABASE_URL and DIRECT_URL:
    ```
    DATABASE_URL="postgresql://postgres.odgkqmszkfndgmecpbey:password@aws-0-eu-central-1.pooler.supabase.com:5432/postgres?pgbouncer=true"
-   DIRECT_URL="postgresql://postgres.odgkqmszkfndgmecpbey:password@aws-0-eu-central-1.pooler.supabase.com:5432/postgres"
-   ```
-   (Use the actual password and credentials provided by your team lead)
-
+   DIRECT_URL="postgresql://postgres.odgkqmszkfndgmecpbey:password@aws-0-eu-central-1.poole
 4. **Install dependencies**
    ```
    pnpm install

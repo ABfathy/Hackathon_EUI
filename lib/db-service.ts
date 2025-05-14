@@ -6,6 +6,9 @@ import { UserType as PrismaUserType } from '../lib/generated/prisma' // Assuming
 export const createUser = async (userData: any) => {
   const hashedPassword = await bcrypt.hash(userData.password, 10);
 
+  // Normalize email to lowercase
+  const normalizedEmail = userData.email.toLowerCase();
+
   // Prepare data for Prisma, ensuring correct types and optional fields handling
   const dataToCreate: {
     name: string;
@@ -19,13 +22,13 @@ export const createUser = async (userData: any) => {
     parentPhone?: string | null;
   } = {
     name: userData.name,
-    email: userData.email,
+    email: normalizedEmail,
     password: hashedPassword, // Use the 'password' field name as expected by Prisma schema
     userType: userData.userType as PrismaUserType, // Assert type from validated API route data
     phoneNumber: userData.phoneNumber,
     dateOfBirth: userData.dateOfBirth,
     familyCode: userData.familyCode,
-    parentEmail: userData.parentEmail,
+    parentEmail: userData.parentEmail ? userData.parentEmail.toLowerCase() : null,
     parentPhone: userData.parentPhone,
   };
 
@@ -66,8 +69,10 @@ export const createUser = async (userData: any) => {
 };
 
 export const getUserByEmail = async (email: string) => {
+  // Convert email to lowercase to ensure case-insensitive matching
+  const normalizedEmail = email.toLowerCase();
   return prisma.user.findUnique({
-    where: { email },
+    where: { email: normalizedEmail },
   });
 };
 

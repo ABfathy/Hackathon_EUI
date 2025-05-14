@@ -20,7 +20,10 @@ export async function GET() {
       )
     }
 
-    const user = await getUserByEmail(session.user.email)
+    // Normalize email to lowercase
+    const normalizedEmail = session.user.email.toLowerCase()
+    
+    const user = await getUserByEmail(normalizedEmail)
     if (!user) {
       return NextResponse.json(
         { error: "User not found" },
@@ -78,7 +81,10 @@ export async function PUT(request: Request) {
       )
     }
 
-    const user = await getUserByEmail(session.user.email)
+    // Normalize email to lowercase
+    const normalizedEmail = session.user.email.toLowerCase()
+    
+    const user = await getUserByEmail(normalizedEmail)
     if (!user) {
       return NextResponse.json(
         { error: "User not found" },

@@ -18,8 +18,11 @@ export const authOptions: AuthOptions = {
           throw new Error("Invalid credentials")
         }
 
+        // Normalize email to lowercase
+        const normalizedEmail = credentials.email.toLowerCase();
+        
         // Find user in the database
-        const user = await getUserByEmail(credentials.email)
+        const user = await getUserByEmail(normalizedEmail)
         console.log("User found:", user ? "Yes" : "No", user ? `(userType: ${user.userType})` : "");
         
         if (!user) {
