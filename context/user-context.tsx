@@ -1,19 +1,22 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession, signOut } from 'next-auth/react';
 
 export type UserType = "PARENT" | "CHILD" | null;
 
 interface UserState {
   userType: UserType;
   age: number | null; // For child users
+  id?: string;
+  name?: string;
+  email?: string;
 }
 
 interface UserContextType extends UserState {
-  loginAsTestUser: (userCategory: "PARENT" | "CHILD_7" | "CHILD_13") => void;
   logout: () => void;
-  // You can add a real setUser function here if you integrate with an actual auth provider later
+  isLoading: boolean;
 }
 
 const defaultUserState: UserState = {
@@ -25,32 +28,42 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<UserState>(defaultUserState);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const router = useRouter();
+  const { data: session, status } = useSession();
 
-  const loginAsTestUser = (userCategory: "PARENT" | "CHILD_7" | "CHILD_13") => {
-    let newUserState: UserState = { userType: null, age: null };
-    if (userCategory === "PARENT") {
-      newUserState = { userType: "PARENT", age: null };
-    } else if (userCategory === "CHILD_7") {
-      newUserState = { userType: "CHILD", age: 7 };
-    } else if (userCategory === "CHILD_13") {
-      newUserState = { userType: "CHILD", age: 13 };
+  useEffect(() => {
+    if (status === 'loading') {
+      setIsLoading(true);
+      return;
     }
-    setUser(newUserState);
-    // For now, let's assume successful "login" navigates to educational resources
-    // In a real app, this might come after a successful Firebase/NextAuth sign-in
-    router.push('/educational-resources'); 
-    // You might want to refresh other parts of the app or use router.replace
-  };
 
-  const logout = () => {
+    if (status === 'authenticated' && session?.user) {
+      // Extract age from dateOfBirth if available
+      let age = null;
+      
+      setUser({
+        userType: session.user.userType as UserType,
+        age,
+        id: session.user.id,
+        name: session.user.name,
+        email: session.user.email
+      });
+    } else {
+      setUser(defaultUserState);
+    }
+    
+    setIsLoading(false);
+  }, [session, status]);
+
+  const logout = async () => {
+    await signOut({ redirect: false });
     setUser(defaultUserState);
-    // Navigate to login or home page after logout
     router.push('/login');
   };
 
   return (
-    <UserContext.Provider value={{ ...user, loginAsTestUser, logout }}>
+    <UserContext.Provider value={{ ...user, logout, isLoading }}>
       {children}
     </UserContext.Provider>
   );

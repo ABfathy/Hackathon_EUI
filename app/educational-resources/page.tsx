@@ -6,9 +6,10 @@ import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { BookOpen, Play, Award, VolumeX, Volume2, Sparkles, Wind, Users, Baby, School, GraduationCap } from "lucide-react"
 import { useLanguage } from "@/context/language-context"
-import { useUser } from "@/context/user-context"
 import Link from "next/link"
 import { useState, useEffect } from "react"
+import { useSession } from "next-auth/react"
+import { calculateAge } from "@/lib/utils"
 
 const translations = {
   en: {
@@ -209,27 +210,40 @@ const translations = {
   }
 }
 
-const calculateAge = (dobString: string | null): number | null => {
-  if (!dobString) return null;
-  try {
-    const birthDate = new Date(dobString);
-    if (isNaN(birthDate.getTime())) return null; 
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return age >= 0 ? age : null; 
-  } catch (e) {
-    return null; 
-  }
-};
-
 export default function EducationalResourcesPage() {
   const { language } = useLanguage()
   const t = translations[language]
-  const { userType, age } = useUser()
+  const { data: session, status } = useSession()
+  
+  // Calculate age from dateOfBirth if available in Prisma/database
+  const [age, setAge] = useState<number | null>(null);
+  const userType = session?.user?.userType || null;
+  
+  // We'll need to fetch user details including dateOfBirth from an API endpoint
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      if (session?.user?.id) {
+        try {
+          const response = await fetch(`/api/users/${session.user.id}`);
+          if (response.ok) {
+            const userData = await response.json();
+            if (userData.dateOfBirth) {
+              const userAge = calculateAge(userData.dateOfBirth);
+              setAge(userAge);
+            }
+          } else {
+            console.error("Failed to fetch user details");
+          }
+        } catch (error) {
+          console.error("Error fetching user details:", error);
+        }
+      }
+    };
+
+    if (status === "authenticated") {
+      fetchUserDetails();
+    }
+  }, [session?.user?.id, status]);
 
   const isAgeGroupVisible = (ageGroupTitle: string, currentChildAge: number | null) => {
     if (userType !== "CHILD" || typeof currentChildAge !== 'number') {
@@ -245,7 +259,18 @@ export default function EducationalResourcesPage() {
   const showChildrenContent = userType === "PARENT" || (userType === "CHILD" && age !== null)
   const showChildIncompleteProfilePrompt = userType === "CHILD" && age === null
   
-  if (userType === null && age === null) {
+  if (status === "loading") {
+    return (
+      <div className="space-y-8">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight">{t.title}</h1>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+  
+  if (status === "unauthenticated" || !session) {
     return (
       <div className="space-y-8">
         <div className="space-y-2">

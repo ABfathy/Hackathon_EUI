@@ -4,7 +4,6 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { LanguageProvider } from "@/context/language-context"
-import { UserProvider } from "@/context/user-context"
 import AuthProvider from "@/components/auth-provider"
 import Sidebar from "@/components/sidebar"
 import { Providers } from "./providers"
@@ -34,15 +33,13 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <LanguageProvider>
-              <UserProvider>
-                <Providers>
-                  <div className="flex min-h-screen bg-gradient-to-br from-white to-purple-50 dark:from-gray-950 dark:to-purple-950">
-                    <Sidebar />
-                    <main className="flex-1 p-6 md:p-8 overflow-y-auto">{children}</main>
-                  </div>
-                  <Toaster />
-                </Providers>
-              </UserProvider>
+              <Providers>
+                <div className="flex min-h-screen bg-gradient-to-br from-white to-purple-50 dark:from-gray-950 dark:to-purple-950">
+                  <Sidebar />
+                  <main className="flex-1 p-6 md:p-8 overflow-y-auto">{children}</main>
+                </div>
+                <Toaster />
+              </Providers>
             </LanguageProvider>
           </ThemeProvider>
         </AuthProvider>

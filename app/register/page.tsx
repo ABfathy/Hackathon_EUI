@@ -91,65 +91,19 @@ export default function RegisterPage() {
     e.preventDefault()
     setIsLoading(true)
 
+    // Validate form
+    if (formData.password !== formData.confirmPassword) {
+      toast({
+        title: t.error,
+        description: t.passwordsDontMatch,
+        variant: "destructive"
+      })
+      setIsLoading(false)
+      return
+    }
+
     try {
-      // Validate passwords match
-      if (formData.password !== formData.confirmPassword) {
-        toast({
-          title: t.error,
-          description: t.passwordsDontMatch,
-          variant: "destructive"
-        })
-        return
-      }
-
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      if (!emailRegex.test(formData.email)) {
-        toast({
-          title: t.error,
-          description: t.invalidEmail,
-          variant: "destructive"
-        })
-        return
-      }
-
-      // Validate phone number format
-      const phoneRegex = /^\+?[\d\s-]{10,}$/
-      if (formData.phoneNumber && !phoneRegex.test(formData.phoneNumber)) {
-        toast({
-          title: t.error,
-          description: t.invalidPhone,
-          variant: "destructive"
-        })
-        return
-      }
-
-      // Validate date format
-      if (formData.dateOfBirth) {
-        const dateRegex = /^\d{4}-\d{2}-\d{2}$/
-        if (!dateRegex.test(formData.dateOfBirth)) {
-          toast({
-            title: t.error,
-            description: t.invalidDate,
-            variant: "destructive"
-          })
-          return
-        }
-      }
-
-      // Validate child registration requirements
-      if (formData.userType === "CHILD") {
-        if (!formData.parentEmail || !formData.parentPhone || !formData.dateOfBirth) {
-          toast({
-            title: t.error,
-            description: t.childRequirements,
-            variant: "destructive"
-          })
-          return
-        }
-      }
-
-      const response = await fetch("/api/register", {
+      const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -169,11 +123,13 @@ export default function RegisterPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || "Registration failed")
+        // Safe access of data.error to prevent undefined errors
+        const errorMessage = data && data.error ? data.error : "Registration failed";
+        throw new Error(errorMessage);
       }
 
       // Show success message with family code if it's a parent account
-      if (formData.userType === "PARENT" && data.user.familyCode) {
+      if (formData.userType === "PARENT" && data.user && data.user.familyCode) {
         toast({
           title: t.success,
           description: `Registration successful! Your family code is: ${data.user.familyCode}. Please save this code as you'll need it to connect with your children's accounts.`,

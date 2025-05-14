@@ -12,8 +12,9 @@ import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { AlertTriangle, CheckCircle, Clock, ExternalLink, FileText, Info, Phone, Wind } from "lucide-react"
 import { useLanguage } from "@/context/language-context"
-// Placeholder: Import your actual useUser hook
-// import { useUser } from "@/context/user-context"; 
+import { useSession } from "next-auth/react"
+import { useState, useEffect } from "react"
+import { calculateAge } from "@/lib/utils"
 
 const translations = {
   en: {
@@ -123,21 +124,45 @@ const translations = {
 export default function ReportingPage() {
   const { language } = useLanguage()
   const t = translations[language]
+  const { data: session, status } = useSession()
+  const [age, setAge] = useState<number | null>(null);
+  
+  // Get user type from session
+  const userType = session?.user?.userType || null;
+  
+  // Fetch user details from API to get age
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      if (session?.user?.id) {
+        try {
+          const response = await fetch(`/api/users/${session.user.id}`);
+          if (response.ok) {
+            const userData = await response.json();
+            if (userData.dateOfBirth) {
+              const userAge = calculateAge(userData.dateOfBirth);
+              setAge(userAge);
+            }
+          } else {
+            console.error("Failed to fetch user details");
+          }
+        } catch (error) {
+          console.error("Error fetching user details:", error);
+        }
+      }
+    };
 
-  // Placeholder: Replace with your actual user data from useUser()
-  // The useUser() hook would fetch user data and calculate age for children.
-  // Example structure for a parent:
-  // const user = { userType: 'PARENT', phoneNumber: '1234567890', parentEmail: 'parent@example.com', age: null };
-  // Example structure for a child (age calculated from dateOfBirth by useUser):
-  const user = { userType: 'CHILD', age: 7 }; // Assuming age is calculated and provided
+    if (status === "authenticated") {
+      fetchUserDetails();
+    }
+  }, [session?.user?.id, status]);
 
   // Define age-specific content for the reporting guide
   const getAgeSpecificStep1Description = () => {
-    if (user.userType === 'CHILD') {
-      if (typeof user.age === 'number') {
-        if (user.age <= 8) {
+    if (userType === 'CHILD') {
+      if (typeof age === 'number') {
+        if (age <= 8) {
           return language === 'en' ? "If you feel unsafe, tell a grown-up you trust right away, like a parent or teacher. They can help call for help if needed." : "إذا شعرت بعدم الأمان، أخبر شخصًا بالغًا تثق به على الفور، مثل أحد الوالدين أو المعلم. يمكنهم المساعدة في طلب المساعدة إذا لزم الأمر.";
-        } else if (user.age <= 12) {
+        } else if (age <= 12) {
           return language === 'en' ? "If you or another child is in danger, find a trusted adult immediately. You can also call 16000 with their help if it's an emergency." : "إذا كنت أنت أو طفل آخر في خطر، ابحث عن شخص بالغ موثوق به على الفور. يمكنك أيضًا الاتصال بالرقم 16000 بمساعدتهم إذا كانت حالة طارئة.";
         } else {
           return language === 'en' ? "If you witness or experience a dangerous situation, ensure your safety first, then report to a trusted adult or call emergency services (16000)." : "إذا شاهدت أو تعرضت لموقف خطير، تأكد من سلامتك أولاً، ثم أبلغ شخصًا بالغًا موثوقًا به أو اتصل بخدمات الطوارئ (16000).";
@@ -149,6 +174,19 @@ export default function ReportingPage() {
     }
     return t.step1Description; // Default for parents
   };
+
+  if (status === "loading") {
+    return (
+      <div className="container mx-auto space-y-8 max-w-6xl">
+        <div className="flex flex-col space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight">
+            {t.title}
+          </h1>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto space-y-8 max-w-6xl">
@@ -177,9 +215,9 @@ export default function ReportingPage() {
       </Card>
 
       <Tabs defaultValue="report" className="w-full">
-        <TabsList className={`grid w-full ${user.userType === 'PARENT' ? 'grid-cols-3' : 'grid-cols-2'}`}>
+        <TabsList className={`grid w-full ${userType === 'PARENT' ? 'grid-cols-3' : 'grid-cols-2'}`}>
           <TabsTrigger value="report">{t.reportIncident}</TabsTrigger>
-          {user.userType === 'PARENT' && (
+          {userType === 'PARENT' && (
             <TabsTrigger value="alerts">{t.alertSystem}</TabsTrigger>
           )}
           <TabsTrigger value="guide">{t.reportingGuide}</TabsTrigger>
@@ -252,7 +290,7 @@ export default function ReportingPage() {
           </Card>
         </TabsContent>
 
-        {user.userType === 'PARENT' && (
+        {userType === 'PARENT' && (
           <TabsContent value="alerts" className="space-y-6 pt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
@@ -362,25 +400,22 @@ export default function ReportingPage() {
         )}
 
         <TabsContent value="guide" className="space-y-6 pt-6">
+          <div className="space-y-4">
+            <h2 className="text-2xl font-semibold">{t.stepByStep}</h2>
+            <p className="text-muted-foreground">{t.guideDescription}</p>
+          </div>
+
           <Card>
             <CardHeader>
-              <CardTitle>{t.stepByStep}</CardTitle>
-              <CardDescription>{t.guideDescription}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center text-emerald-600 font-medium">
-                    1
-                  </div>
-                  <div className="space-y-1">
-                    <h4 className="font-medium">{t.step1}</h4>
-                    <p className="text-sm text-muted-foreground">
-                      {getAgeSpecificStep1Description()}
-                    </p>
-                  </div>
+              <div className="flex items-center gap-4">
+                <div className="bg-purple-100 dark:bg-gray-800 p-2 rounded-full">
+                  <AlertTriangle className="h-6 w-6 text-purple-600" />
                 </div>
+                <CardTitle>{t.step1}</CardTitle>
               </div>
+            </CardHeader>
+            <CardContent>
+              <p>{getAgeSpecificStep1Description()}</p>
             </CardContent>
           </Card>
         </TabsContent>
