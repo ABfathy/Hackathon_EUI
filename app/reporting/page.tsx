@@ -15,6 +15,9 @@ import { useLanguage } from "@/context/language-context"
 import { useSession } from "next-auth/react"
 import { useState, useEffect } from "react"
 import { calculateAge } from "@/lib/utils"
+import { toast } from "@/components/ui/use-toast"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { AlertCircle, MapPin } from "lucide-react"
 
 const translations = {
   en: {
@@ -25,6 +28,7 @@ const translations = {
     callButton: "Call 16000",
     reportIncident: "Report Incident",
     alertSystem: "Alert System",
+
     reportingGuide: "Reporting Guide",
     anonymousReport: "Anonymous Incident Report",
     reportDescription: "Your information will be kept confidential. You can choose to remain anonymous.",
@@ -72,10 +76,11 @@ const translations = {
     title: "الإبلاغ والمراقبة",
     subtitle: "قم بالإبلاغ عن الحوادث بشكل مجهول والوصول إلى أنظمة المراقبة والتنبيه في الوقت الفعلي.",
     emergencyHotline: "خط الطوارئ",
-    emergencyDescription: "للحصول على مساعدة فورية في حالات الطوارئ، يرجى الاتصال بخط حماية الطفل الوطني.",
+    emergencyDescription: "للحصول على مساعدة فورية في حالات الطوارئ، يرجى الاتصال بالخط الساخن الوطني لحماية الطفل.",
     callButton: "اتصل بـ 16000",
     reportIncident: "الإبلاغ عن حادث",
     alertSystem: "نظام التنبيه",
+
     reportingGuide: "دليل الإبلاغ",
     anonymousReport: "تقرير حادث مجهول",
     reportDescription: "سيتم الحفاظ على سرية معلوماتك. يمكنك اختيار البقاء مجهولاً.",
@@ -125,39 +130,209 @@ export default function ReportingPage() {
   const { language } = useLanguage()
   const t = translations[language]
   const { data: session, status } = useSession()
-  const [age, setAge] = useState<number | null>(null);
+  const [userDetails, setUserDetails] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [age, setAge] = useState<number | null>(null)
   
-  // Get user type from session
+  // State for incident reporting form
+  const [incidentType, setIncidentType] = useState('')
+  const [location, setLocation] = useState('')
+  const [description, setDescription] = useState('')
+  const [reporterName, setReporterName] = useState('')
+  const [contactInfo, setContactInfo] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [userLocation, setUserLocation] = useState<{ latitude: number | null; longitude: number | null }>({ latitude: null, longitude: null })
+  const [locationDetected, setLocationDetected] = useState(false)
+  
+  // Form validation errors
+  const [errors, setErrors] = useState({
+    incidentType: false,
+    location: false,
+    description: false
+  })
+  
+  // State for alerts
+  const [alerts, setAlerts] = useState<any[]>([])
+  const [loadingAlerts, setLoadingAlerts] = useState(false)
+  const [alertRadius, setAlertRadius] = useState('5') // Default radius is 5km
+  
   const userType = session?.user?.userType || null;
   
-  // Fetch user details from API to get age
-  useEffect(() => {
-    const fetchUserDetails = async () => {
-      if (session?.user?.id) {
-        try {
-          const response = await fetch(`/api/users/${session.user.id}`);
-          if (response.ok) {
-            const userData = await response.json();
-            if (userData.dateOfBirth) {
-              const userAge = calculateAge(userData.dateOfBirth);
-              setAge(userAge);
-            }
-          } else {
-            console.error("Failed to fetch user details");
+  // Function to fetch user details
+  async function fetchUserDetails() {
+    if (session?.user?.id) {
+      try {
+        const response = await fetch(`/api/users/${session.user.id}`);
+        if (response.ok) {
+          const userData = await response.json();
+          setUserDetails(userData);
+          if (userData.dateOfBirth) {
+            const userAge = calculateAge(userData.dateOfBirth);
+            setAge(userAge);
           }
-        } catch (error) {
-          console.error("Error fetching user details:", error);
+        } else {
+          console.error("Failed to fetch user details");
         }
+      } catch (error) {
+        console.error("Error fetching user details:", error);
+      } finally {
+        setLoading(false);
       }
-    };
-
-    if (status === "authenticated") {
-      fetchUserDetails();
     }
-  }, [session?.user?.id, status]);
+  }
 
-  // Define age-specific content for the reporting guide
-  const getAgeSpecificStep1Description = () => {
+  useEffect(() => {
+    if (session?.user?.email) {
+      fetchUserDetails()
+    } else {
+      setLoading(false)
+    }
+    
+    // Get user's location if available
+    if (typeof navigator !== 'undefined' && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          })
+          setLocationDetected(true)
+          // You could use a reverse geocoding service here to get the address
+          // For now, we'll just use the coordinates
+          
+          // Fetch alerts once we have the user's location
+          fetchAlerts()
+        },
+        (error) => {
+          console.error('Error getting location:', error)
+          // Still fetch alerts even if we couldn't get the location
+          fetchAlerts()
+        }
+      )
+    } else {
+      // Fetch alerts even if geolocation is not available
+      fetchAlerts()
+    }
+  }, [session])
+
+  // Function to fetch alerts from the API
+  async function fetchAlerts() {
+    setLoadingAlerts(true)
+    try {
+      // Build query parameters
+      const params = new URLSearchParams()
+      if (session?.user && 'familyCode' in session.user && session.user.familyCode) {
+        params.append('familyCode', session.user.familyCode as string)
+      }
+      params.append('radius', alertRadius)
+      
+      const response = await fetch(`/api/alerts?${params.toString()}`)
+      const data = await response.json()
+      
+      if (data.success) {
+        setAlerts(data.alerts)
+      } else {
+        console.error('Failed to fetch alerts:', data.error)
+      }
+    } catch (error) {
+      console.error('Error fetching alerts:', error)
+    } finally {
+      setLoadingAlerts(false)
+    }
+  }
+  
+  // Function to handle changing the alert radius
+  function handleRadiusChange(radius: string) {
+    setAlertRadius(radius)
+    fetchAlerts()
+  }
+  
+  async function handleSubmitReport(e: React.FormEvent) {
+    e.preventDefault()
+    
+    // Reset previous errors
+    setErrors({
+      incidentType: false,
+      location: false,
+      description: false
+    })
+    
+    // Validate required fields
+    const newErrors = {
+      incidentType: !incidentType,
+      location: !location,
+      description: !description
+    }
+    
+    setErrors(newErrors)
+    
+    // Check if any errors exist
+    if (newErrors.incidentType || newErrors.location || newErrors.description) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in all required fields",
+        variant: "destructive"
+      })
+      return
+    }
+    
+    setIsSubmitting(true)
+    
+    try {
+      const response = await fetch('/api/incidents', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          type: incidentType,
+          location: location || 'Unknown',
+          description,
+          name: reporterName || null,
+          contact: contactInfo || null,
+          latitude: userLocation.latitude,
+          longitude: userLocation.longitude
+        })
+      })
+      
+      const data = await response.json()
+      
+      if (data.success) {
+        toast({
+          title: "Report submitted",
+          description: "Your incident report has been submitted successfully",
+          variant: "default"
+        })
+        
+        // Reset form
+        setIncidentType('')
+        setLocation('')
+        setDescription('')
+        setReporterName('')
+        setContactInfo('')
+        
+        // Refresh alerts to show the new one
+        fetchAlerts()
+      } else {
+        toast({
+          title: "Error",
+          description: data.error || "Failed to submit report",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.error('Error submitting report:', error)
+      toast({
+        title: "Error",
+        description: "There was a problem submitting your report. Please try again.",
+        variant: "destructive"
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  function getAgeSpecificStep1Description() {
     if (userType === 'CHILD') {
       if (typeof age === 'number') {
         if (age <= 8) {
@@ -175,7 +350,7 @@ export default function ReportingPage() {
     return t.step1Description; // Default for parents
   };
 
-  if (status === "loading") {
+  if (status === "loading" || loading) {
     return (
       <div className="container mx-auto space-y-8 max-w-6xl">
         <div className="flex flex-col space-y-2">
@@ -215,11 +390,9 @@ export default function ReportingPage() {
       </Card>
 
       <Tabs defaultValue="report" className="w-full">
-        <TabsList className={`grid w-full ${userType === 'PARENT' ? 'grid-cols-3' : 'grid-cols-2'}`}>
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="report">{t.reportIncident}</TabsTrigger>
-          {userType === 'PARENT' && (
-            <TabsTrigger value="alerts">{t.alertSystem}</TabsTrigger>
-          )}
+          <TabsTrigger value="alerts">{t.alertSystem}</TabsTrigger>
           <TabsTrigger value="guide">{t.reportingGuide}</TabsTrigger>
         </TabsList>
 
@@ -231,62 +404,107 @@ export default function ReportingPage() {
                 {t.reportDescription}
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label>{t.incidentType}</Label>
-                <RadioGroup defaultValue="physical">
-                  <div className="flex flex-col space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="physical" id="physical" />
-                      <Label htmlFor="physical">{t.physicalAbuse}</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="emotional" id="emotional" />
-                      <Label htmlFor="emotional">{t.emotionalAbuse}</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="sexual" id="sexual" />
-                      <Label htmlFor="sexual">{t.sexualAbuse}</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="neglect" id="neglect" />
-                      <Label htmlFor="neglect">{t.neglect}</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="other" id="other" />
-                      <Label htmlFor="other">{t.other}</Label>
-                    </div>
-                  </div>
-                </RadioGroup>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="location">{t.location}</Label>
-                <Input id="location" placeholder={t.locationPlaceholder} />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">{t.description}</Label>
-                <Textarea id="description" placeholder={t.descriptionPlaceholder} rows={5} />
-              </div>
-
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <Info className="h-4 w-4" />
-                  {t.contactInfo}
-                </Label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input placeholder={t.namePlaceholder} />
-                  <Input placeholder={t.contactPlaceholder} />
+            <form onSubmit={handleSubmitReport}>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label className={errors.incidentType ? "text-red-500" : ""}>{t.incidentType} *</Label>
+                  <Select
+                    value={incidentType}
+                    onValueChange={(value) => {
+                      setIncidentType(value);
+                      setErrors({...errors, incidentType: false});
+                    }}
+                    required
+                  >
+                    <SelectTrigger className={errors.incidentType ? "border-red-500 ring-red-500" : ""}>
+                      <SelectValue placeholder="Select type of incident" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="PHYSICAL_ABUSE">{t.physicalAbuse}</SelectItem>
+                      <SelectItem value="EMOTIONAL_ABUSE">{t.emotionalAbuse}</SelectItem>
+                      <SelectItem value="SEXUAL_ABUSE">{t.sexualAbuse}</SelectItem>
+                      <SelectItem value="NEGLECT">{t.neglect}</SelectItem>
+                      <SelectItem value="OTHER">{t.other}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {errors.incidentType && (
+                    <p className="text-xs text-red-500 mt-1">Please select an incident type</p>
+                  )}
                 </div>
-              </div>
-            </CardContent>
-            <CardFooter className="flex flex-col space-y-4">
-              <Button className="w-full bg-emerald-600 hover:bg-emerald-700">{t.submitReport}</Button>
-              <p className="text-xs text-muted-foreground text-center">
-                {t.submitDisclaimer}
-              </p>
-            </CardFooter>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="location" className={errors.location ? "text-red-500" : ""}>{t.location} *</Label>
+                    {locationDetected && (
+                      <div className="flex items-center text-xs text-emerald-600">
+                        <MapPin className="h-3 w-3 mr-1" />
+                        <span>Location detected</span>
+                      </div>
+                    )}
+                  </div>
+                  <Input 
+                    id="location" 
+                    placeholder={locationDetected ? `${userLocation.latitude?.toFixed(4)}, ${userLocation.longitude?.toFixed(4)}` : t.locationPlaceholder}
+                    value={location}
+                    onChange={(e) => {
+                      setLocation(e.target.value);
+                      setErrors({...errors, location: false});
+                    }}
+                    className={errors.location ? "border-red-500 ring-red-500" : ""}
+                  />
+                  {errors.location && (
+                    <p className="text-xs text-red-500 mt-1">Please enter a location</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="description" className={errors.description ? "text-red-500" : ""}>{t.description} *</Label>
+                  <Textarea 
+                    id="description" 
+                    placeholder={t.descriptionPlaceholder} 
+                    className={`min-h-[120px] ${errors.description ? "border-red-500 ring-red-500" : ""}`} 
+                    value={description}
+                    onChange={(e) => {
+                      setDescription(e.target.value);
+                      setErrors({...errors, description: false});
+                    }}
+                    required
+                  />
+                  {errors.description && (
+                    <p className="text-xs text-red-500 mt-1">Please provide a description</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>{t.contactInfo}</Label>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <Input 
+                      placeholder={t.namePlaceholder} 
+                      value={reporterName}
+                      onChange={(e) => setReporterName(e.target.value)}
+                    />
+                    <Input 
+                      placeholder={t.contactPlaceholder} 
+                      value={contactInfo}
+                      onChange={(e) => setContactInfo(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="text-sm text-muted-foreground">
+                  {t.submitDisclaimer}
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  type="submit" 
+                  className="w-full"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Submitting...' : t.submitReport}
+                </Button>
+              </CardFooter>
+            </form>
           </Card>
         </TabsContent>
 
@@ -298,48 +516,76 @@ export default function ReportingPage() {
                   <CardTitle>{t.recentAlerts}</CardTitle>
                   <CardDescription>{t.alertsDescription}</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-4">
-                    <div className="flex items-start gap-4 p-3 bg-red-50 dark:bg-red-950 rounded-lg border border-red-200 dark:border-red-800">
-                      <AlertTriangle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-medium">{t.highPriority}</h4>
-                          <Badge variant="destructive" className="text-xs">
-                            {t.new}
-                          </Badge>
-                        </div>
-                        <p className="text-sm">{t.alert1}</p>
-                        <p className="text-xs text-muted-foreground">May 13, 2025 - 2:45 PM</p>
-                      </div>
+                <CardContent className="space-y-6">
+                  {loadingAlerts ? (
+                    <div className="flex justify-center items-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
                     </div>
-
-                    <div className="flex items-start gap-4 p-3 bg-amber-50 dark:bg-amber-950 rounded-lg border border-amber-200 dark:border-amber-800">
-                      <Clock className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-medium">{t.communityNotice}</h4>
-                        </div>
-                        <p className="text-sm">{t.alert2}</p>
-                        <p className="text-xs text-muted-foreground">May 12, 2025 - 10:30 AM</p>
-                      </div>
+                  ) : alerts.length > 0 ? (
+                    <div className="space-y-4">
+                      {alerts.map((alert) => {
+                        const incident = alert.incident;
+                        const isNew = new Date(incident.createdAt) > new Date(Date.now() - 24 * 60 * 60 * 1000);
+                        
+                        // Determine the alert type icon and color
+                        let IconComponent = AlertTriangle;
+                        let bgColorClass = 'bg-red-100 dark:bg-red-900';
+                        let textColorClass = 'text-red-600 dark:text-red-400';
+                        
+                        if (alert.isResolved) {
+                          IconComponent = CheckCircle;
+                          bgColorClass = 'bg-green-100 dark:bg-green-900';
+                          textColorClass = 'text-green-600 dark:text-green-400';
+                        } else if (incident.type === 'NEGLECT' || incident.type === 'OTHER') {
+                          IconComponent = Info;
+                          bgColorClass = 'bg-amber-100 dark:bg-amber-900';
+                          textColorClass = 'text-amber-600 dark:text-amber-400';
+                        }
+                        
+                        return (
+                          <div key={alert.id} className="flex items-start gap-4">
+                            <div className={`${bgColorClass} p-2 rounded-full`}>
+                              <IconComponent className={`h-5 w-5 ${textColorClass}`} />
+                            </div>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-medium">
+                                  {incident.type.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                                </h4>
+                                {isNew && (
+                                  <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200">
+                                    {t.new}
+                                  </Badge>
+                                )}
+                                {alert.isResolved && (
+                                  <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200">
+                                    {t.resolved}
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-sm">{incident.description}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(incident.createdAt).toLocaleString()} - {incident.location}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-
-                    <div className="flex items-start gap-4 p-3 bg-emerald-50 dark:bg-emerald-950 rounded-lg border border-emerald-200 dark:border-emerald-800">
-                      <CheckCircle className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-medium">{t.resolved}</h4>
-                        </div>
-                        <p className="text-sm">{t.alert3}</p>
-                        <p className="text-xs text-muted-foreground">May 10, 2025 - 5:15 PM</p>
-                      </div>
+                  ) : (
+                    <div className="py-8 text-center">
+                      <p className="text-muted-foreground">No alerts found in your area</p>
                     </div>
-                  </div>
+                  )}
                 </CardContent>
                 <CardFooter>
-                  <Button variant="outline" className="w-full">
-                    {t.viewAllAlerts}
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => fetchAlerts()}
+                    disabled={loadingAlerts}
+                  >
+                    {loadingAlerts ? 'Loading...' : t.viewAllAlerts}
                   </Button>
                 </CardFooter>
               </Card>
@@ -378,13 +624,28 @@ export default function ReportingPage() {
                     <div className="space-y-2">
                       <Label>{t.alertRadius}</Label>
                       <div className="grid grid-cols-3 gap-2">
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className={alertRadius === '1' ? 'bg-emerald-50 border-emerald-200' : ''}
+                          onClick={() => handleRadiusChange('1')}
+                        >
                           1 km
                         </Button>
-                        <Button variant="outline" size="sm" className="bg-emerald-50 border-emerald-200">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className={alertRadius === '5' ? 'bg-emerald-50 border-emerald-200' : ''}
+                          onClick={() => handleRadiusChange('5')}
+                        >
                           5 km
                         </Button>
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className={alertRadius === '10' ? 'bg-emerald-50 border-emerald-200' : ''}
+                          onClick={() => handleRadiusChange('10')}
+                        >
                           10 km
                         </Button>
                       </div>
@@ -392,12 +653,25 @@ export default function ReportingPage() {
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button className="w-full">{t.savePreferences}</Button>
+                  <Button 
+                    className="w-full"
+                    onClick={() => {
+                      toast({
+                        title: "Preferences saved",
+                        description: "Your alert preferences have been updated",
+                        variant: "default"
+                      });
+                    }}
+                  >
+                    {t.savePreferences}
+                  </Button>
                 </CardFooter>
               </Card>
             </div>
           </TabsContent>
         )}
+        
+
 
         <TabsContent value="guide" className="space-y-6 pt-6">
           <div className="space-y-4">

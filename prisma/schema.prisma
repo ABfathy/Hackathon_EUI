@@ -17,9 +17,9 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String       @id @default(cuid())
   name          String
-  email         String    @unique
+  email         String       @unique
   password      String
   userType      UserType
   phoneNumber   String?
@@ -27,11 +27,14 @@ model User {
   familyCode    String?
   parentEmail   String?
   parentPhone   String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  family        Family?   @relation(fields: [familyCode], references: [code])
-  children      User[]    @relation("ParentChild")
-  parent        User?     @relation("ParentChild", fields: [parentEmail], references: [email])
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  family        Family?      @relation(fields: [familyCode], references: [code])
+  children      User[]       @relation("ParentChild")
+  parent        User?        @relation("ParentChild", fields: [parentEmail], references: [email])
+  posts         ForumPost[]
+  replies       ForumReply[]
+  incidents     Incident[]
 }
 
 model Family {
@@ -39,6 +42,84 @@ model Family {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   members   User[]
+  alerts    Alert[]
+}
+
+model ForumSection {
+  id          String      @id @default(cuid())
+  name        String
+  description String
+  type        SectionType
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  posts       ForumPost[]
+}
+
+model ForumPost {
+  id          String      @id @default(cuid())
+  title       String
+  content     String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  author      User        @relation(fields: [authorId], references: [id])
+  authorId    String
+  section     ForumSection @relation(fields: [sectionId], references: [id])
+  sectionId   String
+  replies     ForumReply[]
+}
+
+model ForumReply {
+  id        String    @id @default(cuid())
+  content   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  author    User      @relation(fields: [authorId], references: [id])
+  authorId  String
+  post      ForumPost @relation(fields: [postId], references: [id])
+  postId    String
+}
+
+// Incident reporting models
+model Incident {
+  id          String        @id @default(cuid())
+  type        IncidentType
+  location    String
+  latitude    Float?
+  longitude   Float?
+  ipAddress   String?
+  description String
+  name        String?
+  contact     String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  reporterId  String?
+  reporter    User?         @relation(fields: [reporterId], references: [id])
+  alert       Alert?
+}
+
+model Alert {
+  id          String   @id @default(cuid())
+  incidentId  String   @unique
+  incident    Incident @relation(fields: [incidentId], references: [id])
+  familyId    String?
+  family      Family?  @relation(fields: [familyId], references: [code])
+  isResolved  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum SectionType {
+  PARENTS_ONLY
+  TEENS_ONLY
+  BOTH
+}
+
+enum IncidentType {
+  PHYSICAL_ABUSE
+  EMOTIONAL_ABUSE
+  SEXUAL_ABUSE
+  NEGLECT
+  OTHER
 }
 
 enum UserType {

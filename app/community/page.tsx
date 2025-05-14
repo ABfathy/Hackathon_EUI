@@ -9,6 +9,8 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { MapPin, Bell, Video, FileText, Users, Search, Calendar, ExternalLink } from "lucide-react"
 import { useLanguage } from "@/context/language-context"
+import SafetyMap from "@/components/safety-map"
+import { useState, useEffect } from "react"
 
 const translations = {
   en: {
@@ -114,6 +116,106 @@ const translations = {
 export default function CommunityPage() {
   const { language } = useLanguage()
   const t = translations[language]
+  
+  // State for alerts
+  const [alerts, setAlerts] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  
+  // Fetch alerts from the API
+  useEffect(() => {
+    async function fetchAlerts() {
+      try {
+        setLoading(true)
+        // Fetch real incidents from the API
+        const response = await fetch('/api/incidents')
+        const data = await response.json()
+        
+        if (data.success && data.alerts) {
+          // Transform the API data to match our expected format
+          const formattedAlerts = data.alerts.map((alert: any) => ({
+            id: alert.id,
+            incident: {
+              ...alert.incident,
+              // Add default coordinates if none are provided
+              latitude: alert.incident.latitude || 30.0444 + (Math.random() * 0.01 - 0.005),
+              longitude: alert.incident.longitude || 31.2357 + (Math.random() * 0.01 - 0.005)
+            },
+            isResolved: alert.isResolved || false
+          }))
+          
+          setAlerts(formattedAlerts)
+        } else {
+          // If API fails or returns no data, use sample data
+          const sampleData = [
+    {
+      id: '1',
+      incident: {
+        id: '1',
+        type: 'PHYSICAL_ABUSE',
+        location: 'Central Park Area',
+        latitude: 30.0444,
+        longitude: 31.2357,
+        description: 'Multiple reports of suspicious activity near playground',
+        createdAt: new Date().toISOString()
+      },
+      isResolved: false
+    },
+    {
+      id: '2',
+      incident: {
+        id: '2',
+        type: 'NEGLECT',
+        location: 'Downtown Shopping Center',
+        latitude: 30.0500,
+        longitude: 31.2400,
+        description: 'Reports of individuals approaching unaccompanied minors',
+        createdAt: new Date().toISOString()
+      },
+      isResolved: false
+    },
+    {
+      id: '3',
+      incident: {
+        id: '3',
+        type: 'OTHER',
+        location: 'Riverside Elementary School',
+        latitude: 30.0480,
+        longitude: 31.2320,
+        description: 'Increased security and safety measures implemented',
+        createdAt: new Date().toISOString()
+      },
+      isResolved: true
+    }
+          ]
+          
+          setAlerts(sampleData)
+        }
+        setLoading(false)
+      } catch (error) {
+        console.error('Error fetching alerts:', error)
+        // If there's an error, use sample data
+        const fallbackData = [
+          {
+            id: '1',
+            incident: {
+              id: '1',
+              type: 'PHYSICAL_ABUSE',
+              location: 'Central Park Area',
+              latitude: 30.0444,
+              longitude: 31.2357,
+              description: 'Multiple reports of suspicious activity near playground',
+              createdAt: new Date().toISOString()
+            },
+            isResolved: false
+          }
+        ]
+        setAlerts(fallbackData)
+        setLoading(false)
+      }
+    }
+    
+    fetchAlerts()
+  }, [])
 
   return (
     <div className="container mx-auto space-y-8 max-w-6xl">
@@ -146,75 +248,71 @@ export default function CommunityPage() {
         </TabsList>
 
         <TabsContent value="map" className="space-y-6 pt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t.interactiveSafetyMap}</CardTitle>
-              <CardDescription>{t.mapDescription}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="aspect-[16/9] bg-gray-100 dark:bg-gray-800 rounded-md flex flex-col items-center justify-center p-6">
-                <MapPin className="h-12 w-12 text-muted-foreground mb-4" />
-                <p className="text-center text-muted-foreground">
-                  {t.mapPlaceholder}
-                </p>
-                <p className="text-center text-sm text-muted-foreground mt-2">{t.mapDataPlaceholder}</p>
-              </div>
-
-              <div className="mt-6 space-y-4">
-                <h3 className="font-medium">{t.recentAlerts}</h3>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border">
-                    <MapPin className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="text-sm font-medium">{t.centralPark}</h4>
-                        <Badge variant="destructive" className="text-xs">
-                          {t.highRisk}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {t.suspiciousActivity}
-                      </p>
+          <div className="space-y-6">
+            <div className="w-full h-[400px] border rounded-lg overflow-hidden">
+              <SafetyMap 
+                alerts={alerts} 
+                userLocation={{ latitude: 30.0444, longitude: 31.2357 }} 
+                radius="2"
+                loading={loading}
+              />
+            </div>
+          
+            <div className="mt-6 space-y-4">
+              <h3 className="font-medium">{t.recentAlerts}</h3>
+              <div className="space-y-3">
+                <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border">
+                  <MapPin className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-sm font-medium">{t.centralPark}</h4>
+                      <Badge variant="destructive" className="text-xs">
+                        {t.highRisk}
+                      </Badge>
                     </div>
+                    <p className="text-xs text-muted-foreground">
+                      {t.suspiciousActivity}
+                    </p>
                   </div>
+                </div>
 
-                  <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border">
-                    <MapPin className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="text-sm font-medium">{t.downtownShopping}</h4>
-                        <Badge variant="outline" className="text-xs border-amber-500 text-amber-500">
-                          {t.mediumRisk}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {t.approachingMinors}
-                      </p>
+                <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border">
+                  <MapPin className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-sm font-medium">{t.downtownShopping}</h4>
+                      <Badge variant="outline" className="text-xs border-amber-500 text-amber-500">
+                        {t.mediumRisk}
+                      </Badge>
                     </div>
+                    <p className="text-xs text-muted-foreground">
+                      {t.approachingMinors}
+                    </p>
                   </div>
+                </div>
 
-                  <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border">
-                    <MapPin className="h-5 w-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="text-sm font-medium">{t.riversideSchool}</h4>
-                        <Badge variant="outline" className="text-xs border-emerald-500 text-emerald-500">
-                          {t.safeZone}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {t.increasedSecurity}
-                      </p>
+                <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border">
+                  <MapPin className="h-5 w-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-sm font-medium">{t.riversideSchool}</h4>
+                      <Badge variant="outline" className="text-xs border-emerald-500 text-emerald-500">
+                        {t.safeZone}
+                      </Badge>
                     </div>
+                    <p className="text-xs text-muted-foreground">
+                      {t.increasedSecurity}
+                    </p>
                   </div>
                 </div>
               </div>
-            </CardContent>
-            <CardFooter className="flex flex-col sm:flex-row gap-2 sm:justify-between">
-              <Button variant="outline" className="w-full sm:w-auto">{t.filterAlerts}</Button>
-              <Button className="w-full sm:w-auto">{t.reportNewConcern}</Button>
-            </CardFooter>
-          </Card>
+            </div>
+
+            <div className="flex justify-center gap-4 mt-4">
+              <Button variant="outline">{t.filterAlerts}</Button>
+              <Button onClick={() => window.location.href = '/reporting'}>{t.reportNewConcern}</Button>
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="campaigns" className="space-y-6 pt-6">

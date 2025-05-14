@@ -91,33 +91,33 @@ export default function LoginPage() {
               {t.success}
             </div>
           )}
-        </CardHeader>
+              </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
+                <div className="space-y-2">
               <Label htmlFor="email">{t.email}</Label>
-              <Input
-                id="email"
-                type="email"
+                  <Input
+                    id="email"
+                    type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-              />
-            </div>
-            <div className="space-y-2">
+                  />
+                </div>
+                <div className="space-y-2">
               <Label htmlFor="password">{t.password}</Label>
-              <Input
-                id="password"
-                type="password"
+                  <Input
+                    id="password"
+                    type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-              />
-            </div>
+                  />
+                </div>
             {error && (
               <div className="text-sm text-red-500 text-center">
                 {error}
-              </div>
+                </div>
             )}
 
             <Button
@@ -126,12 +126,12 @@ export default function LoginPage() {
               disabled={isLoading}
             >
               {isLoading ? t.loading : t.signIn}
-            </Button>
+                </Button>
             <div className="text-center text-sm">
               <Link href="/register" className="text-primary hover:underline">
                 {t.register}
-              </Link>
-            </div>
+          </Link>
+        </div>
           </form>
         </CardContent>
       </Card>
