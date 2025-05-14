@@ -165,17 +165,21 @@ export default function HomePage() {
                   : "يقدم مساعدنا الذكي الاصطناعي الودود بالتوجيه الصوتي نصائح أمان مناسبة للعمر وإرشادات ممتعة للأطفال."}
               </p>
             </div>
-            <Button className="bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-lg px-6 py-6 h-auto">
-              {language === "en" ? "Start Voice Guidance" : "بدء التوجيه الصوتي"}
-            </Button>
+            <Link href="/ai-assistant">
+              <Button className="bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-lg px-6 py-6 h-auto">
+                {language === "en" ? "Try AI Assistant" : "جرّب المساعد الذكي"}
+              </Button>
+            </Link>
           </CardContent>
         </Card>
       </section>
 
       <div className="fixed bottom-6 right-6 z-40 md:hidden">
-        <Button size="lg" className="h-16 w-16 rounded-full bg-purple-600 hover:bg-purple-700 shadow-xl">
-          <Bot className="h-8 w-8" />
-        </Button>
+        <Link href="/ai-assistant">
+          <Button size="lg" className="h-16 w-16 rounded-full bg-purple-600 hover:bg-purple-700 shadow-xl">
+            <Bot className="h-8 w-8" />
+          </Button>
+        </Link>
       </div>
     </div>
   )

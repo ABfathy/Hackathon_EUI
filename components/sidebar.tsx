@@ -169,8 +169,8 @@ export default function Sidebar() {
             <span className="sr-only">Toggle Menu</span>
           </Button>
         </SheetTrigger>
-        <SheetContent 
-          side="left" 
+        <SheetContent
+          side="left"
           className="p-0 rounded-r-3xl w-[85vw] sm:w-[400px]"
           title={language === "en" ? "Navigation Menu" : "قائمة التنقل"}
         >
@@ -215,10 +215,12 @@ export default function Sidebar() {
             </ScrollArea>
             <div className="px-4 flex flex-col gap-2">
               {renderAuthButtons()}
-              <Button variant="outline" className="w-full flex items-center gap-2 rounded-xl h-12 text-base border-purple-200 dark:border-gray-700">
-                <Bot className="h-5 w-5 text-purple-600 dark:text-gray-300" />
-                <span className="truncate">{language === "en" ? "AI Assistant" : "المساعد الذكي"}</span>
-              </Button>
+              <Link href="/ai-assistant" className="w-full">
+                <Button variant="outline" className="w-full flex items-center gap-2 rounded-xl h-12 text-base border-purple-200 dark:border-gray-700">
+                  <Bot className="h-5 w-5 text-purple-600 dark:text-gray-300" />
+                  <span className="truncate">{language === "en" ? "AI Assistant" : "المساعد الذكي"}</span>
+                </Button>
+              </Link>
               <Button
                 variant="ghost"
                 onClick={toggleLanguage}
@@ -283,10 +285,12 @@ export default function Sidebar() {
         </ScrollArea>
         <div className="p-4 space-y-2 border-t border-gray-200 dark:border-gray-700">
           {renderAuthButtons()}
-          <Button variant="outline" className="w-full flex items-center gap-2 rounded-xl h-12 text-base border-gray-200 dark:border-gray-700">
-            <Bot className="h-5 w-5 text-gray-700 dark:text-gray-300" />
-            <span>{language === "en" ? "AI Assistant" : "المساعد الذكي"}</span>
-          </Button>
+          <Link href="/ai-assistant" className="w-full">
+            <Button variant="outline" className="w-full flex items-center gap-2 rounded-xl h-12 text-base border-gray-200 dark:border-gray-700">
+              <Bot className="h-5 w-5 text-gray-700 dark:text-gray-300" />
+              <span>{language === "en" ? "AI Assistant" : "المساعد الذكي"}</span>
+            </Button>
+          </Link>
           <Button
             variant="ghost"
             onClick={toggleLanguage}
