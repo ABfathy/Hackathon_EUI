@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Home, BookOpen, AlertTriangle, MapPin, MessageCircle, Wind, Menu, Bot, Globe, LogIn, Moon, Sun, Languages, User, LogOut } from "lucide-react"
+import { Home, BookOpen, AlertTriangle, MapPin, MessageCircle, Wind, Menu, Bot, Globe, LogIn, Moon, Sun, Languages, User, LogOut, Users } from "lucide-react"
 import { useLanguage } from "@/context/language-context"
 import { useTheme } from "next-themes"
 import { useSession, signOut } from "next-auth/react"
@@ -50,6 +50,12 @@ const navItems: NavItem[] = [
     titleAr: "منتدى الدعم",
     href: "/support",
     icon: <MessageCircle className="h-5 w-5" />,
+  },
+  {
+    title: "Expert Counseling",
+    titleAr: "استشارة الخبراء",
+    href: "/expert-counseling",
+    icon: <Users className="h-5 w-5" />,
   },
   {
     title: "Security & Privacy",
