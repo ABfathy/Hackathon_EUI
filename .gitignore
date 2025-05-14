@@ -25,3 +25,4 @@ yarn-error.log*
 
 openai-env-template.txt
 lib/openai/run-ai.sh
+package-lock.json
