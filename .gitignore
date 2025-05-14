@@ -22,6 +22,7 @@ yarn-error.log*
 .idea/
 *.swp
 
+lib/generated/
 
 openai-env-template.txt
 lib/openai/run-ai.sh
