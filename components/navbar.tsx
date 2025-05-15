@@ -39,8 +39,16 @@ export default function Navbar() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-8">
             <Link href="/" className="flex items-center gap-2">
-              <Wind className="h-6 w-6 text-primary" />
-              <span className="font-semibold">Nismah</span>
+              <div className="inline-block p-2 bg-gradient-to-br from-yellow-200 to-purple-200 rounded-full text-purple-600 dark:from-yellow-800 dark:to-purple-800 dark:text-purple-300 animate-pulse shadow-md">
+                <Wind className="h-5 w-5" />
+              </div>
+              <span className="font-semibold">
+                {language === "en" ? (
+                  <span className="text-purple-600">Nismah</span>
+                ) : (
+                  <span className="text-emerald-600">نِسمة</span>
+                )}
+              </span>
             </Link>
             <div className="hidden md:flex items-center gap-6">
               <Link href="/" className="text-sm hover:text-primary transition-colors">

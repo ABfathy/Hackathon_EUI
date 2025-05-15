@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Home, BookOpen, AlertTriangle, MapPin, MessageCircle, Shield, Menu, Bot, Globe, LogIn, Moon, Sun, Languages, User, LogOut, Users } from "lucide-react"
+import { Home, BookOpen, AlertTriangle, MapPin, MessageCircle, Shield, Menu, Bot, Globe, LogIn, Moon, Sun, Languages, User, LogOut, Users, Wind } from "lucide-react"
 import { useLanguage } from "@/context/language-context"
 import { useTheme } from "next-themes"
 import { useSession, signOut } from "next-auth/react"
@@ -184,7 +184,7 @@ export default function Sidebar() {
             <div className="p-6">
               <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
                 <div className="bg-yellow-200 dark:bg-gray-800/50 p-3 rounded-full animate-pulse">
-                  <Shield className="h-6 w-6 text-purple-600 dark:text-gray-300" />
+                  <Wind className="h-6 w-6 text-purple-600 dark:text-gray-300" />
                 </div>
                 {language === "en" ? (
                   <span className="text-purple-600 dark:text-gray-200">Nismah</span>
@@ -219,34 +219,54 @@ export default function Sidebar() {
                 </div>
               </div>
             </ScrollArea>
-            <div className="px-4 flex flex-col gap-2">
-              {renderAuthButtons()}
+            {/* Updated Mobile Sidebar Bottom Section */}
+            <div className="px-6 py-4 flex flex-col gap-3 bg-gradient-to-r from-gray-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 border-t dark:border-gray-800 mt-2">
+              {/* Profile buttons remain handled by renderAuthButtons() */}
+              <div className="flex flex-col gap-3">
+                {renderAuthButtons()}
+              </div>
+              
+              {/* AI Assistant Button - Updated styling */}
               <Link href="/ai-assistant" className="w-full">
-                <Button variant="outline" className="w-full flex items-center gap-2 rounded-xl h-12 text-base border-purple-200 dark:border-gray-700">
-                  <Bot className="h-5 w-5 text-purple-600 dark:text-gray-300" />
-                  <span className="truncate">{language === "en" ? "AI Assistant" : "المساعد الذكي"}</span>
+                <Button 
+                  variant="outline" 
+                  className="w-full flex items-center justify-between rounded-xl h-12 text-base bg-white dark:bg-gray-800 hover:bg-purple-100 dark:hover:bg-gray-700 border-purple-100 dark:border-gray-700 shadow-sm transition-all"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="bg-purple-100 dark:bg-purple-900/30 p-1.5 rounded-lg">
+                      <Bot className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <span className="truncate">{language === "en" ? "AI Assistant" : "المساعد الذكي"}</span>
+                  </div>
+                  <div className="text-purple-500 text-xs px-1.5 py-0.5 bg-purple-50 dark:bg-purple-900/20 rounded-md dark:text-purple-300">
+                    AI
+                  </div>
                 </Button>
               </Link>
-              <Button
-                variant="ghost"
-                onClick={toggleLanguage}
-                className="w-full flex items-center gap-2 rounded-xl h-12 text-base border-2 border-dashed border-purple-200 dark:border-gray-700"
-              >
-                <Globe className="h-5 w-5 text-purple-600 dark:text-gray-300" />
-                <span className="truncate">{language === "en" ? "العربية" : "English"}</span>
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="w-full flex items-center gap-2 rounded-xl h-12 text-base border-2 border-dashed border-purple-200 dark:border-gray-700"
-              >
-                {mounted && theme === "dark" ? (
-                  <Sun className="h-5 w-5 text-purple-600 dark:text-gray-300" />
-                ) : (
-                  <Moon className="h-5 w-5 text-purple-600 dark:text-gray-300" />
-                )}
-                <span>{mounted && theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
-              </Button>
+              
+              {/* Language & Theme Controls in a grid layout */}
+              <div className="grid grid-cols-2 gap-3 mt-1">
+                <Button
+                  variant="ghost"
+                  onClick={toggleLanguage}
+                  className="flex items-center gap-2 rounded-xl py-2 bg-white/80 dark:bg-gray-800/80 hover:bg-purple-50 dark:hover:bg-gray-700 border border-purple-100 dark:border-gray-700 shadow-sm transition-all"
+                >
+                  <Globe className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                  <span className="text-sm">{language === "en" ? "العربية" : "English"}</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                  className="flex items-center gap-2 rounded-xl py-2 bg-white/80 dark:bg-gray-800/80 hover:bg-purple-50 dark:hover:bg-gray-700 border border-purple-100 dark:border-gray-700 shadow-sm transition-all"
+                >
+                  {mounted && theme === "dark" ? (
+                    <Sun className="h-4 w-4 text-amber-500" />
+                  ) : (
+                    <Moon className="h-4 w-4 text-indigo-500" />
+                  )}
+                  <span className="text-sm">{mounted && theme === "dark" ? "Light" : "Dark"}</span>
+                </Button>
+              </div>
             </div>
           </div>
         </SheetContent>
@@ -257,7 +277,7 @@ export default function Sidebar() {
         <div className="p-6">
           <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
             <div className="bg-yellow-200 dark:bg-gray-800/50 p-3 rounded-full animate-pulse">
-              <Shield className="h-6 w-6 text-purple-600 dark:text-gray-300" />
+              <Wind className="h-6 w-6 text-purple-600 dark:text-gray-300" />
             </div>
             {language === "en" ? (
               <span className="text-purple-600 dark:text-gray-200">Nismah</span>
@@ -289,34 +309,54 @@ export default function Sidebar() {
             ))}
           </nav>
         </ScrollArea>
-        <div className="p-4 space-y-2 border-t border-gray-200 dark:border-gray-700">
-          {renderAuthButtons()}
-          <Link href="/ai-assistant" className="w-full">
-            <Button variant="outline" className="w-full flex items-center gap-2 rounded-xl h-12 text-base border-gray-200 dark:border-gray-700">
-              <Bot className="h-5 w-5 text-gray-700 dark:text-gray-300" />
-              <span>{language === "en" ? "AI Assistant" : "المساعد الذكي"}</span>
+        {/* Updated Desktop Sidebar Bottom Section */}
+        <div className="p-5 space-y-3 bg-gradient-to-r from-gray-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 border-t dark:border-gray-800 rounded-br-3xl">
+          {/* Profile and sign out buttons */}
+          <div className="flex flex-col gap-3 mb-3">
+            {renderAuthButtons()}
+          </div>
+          
+          {/* AI Assistant Button - Updated styling */}
+          <Link href="/ai-assistant" className="w-full block">
+            <Button
+              variant="outline"
+              className="w-full flex items-center justify-between rounded-xl h-12 text-base bg-white dark:bg-gray-800 hover:bg-purple-100 dark:hover:bg-gray-700 border-purple-100 dark:border-gray-700 shadow-sm transition-all"
+            >
+              <div className="flex items-center gap-2">
+                <div className="bg-purple-100 dark:bg-purple-900/30 p-1.5 rounded-lg">
+                  <Bot className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                </div>
+                <span>{language === "en" ? "AI Assistant" : "المساعد الذكي"}</span>
+              </div>
+              <div className="text-purple-500 text-xs px-1.5 py-0.5 bg-purple-50 dark:bg-purple-900/20 rounded-md dark:text-purple-300">
+                AI
+              </div>
             </Button>
           </Link>
-          <Button
-            variant="ghost"
-            onClick={toggleLanguage}
-            className="w-full flex items-center gap-2 rounded-xl h-12 text-base border-2 border-dashed border-purple-200 dark:border-gray-700"
-          >
-            <Globe className="h-5 w-5 text-purple-600 dark:text-gray-300" />
-            <span>{language === "en" ? "العربية" : "English"}</span>
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="w-full flex items-center gap-2 rounded-xl h-12 text-base border-2 border-dashed border-purple-200 dark:border-gray-700"
-          >
-            {mounted && theme === "dark" ? (
-              <Sun className="h-5 w-5 text-purple-600 dark:text-gray-300" />
-            ) : (
-              <Moon className="h-5 w-5 text-purple-600 dark:text-gray-300" />
-            )}
-            <span>{mounted && theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
-          </Button>
+          
+          {/* Language & Theme Controls in a grid layout */}
+          <div className="grid grid-cols-2 gap-3 mt-4">
+            <Button
+              variant="ghost"
+              onClick={toggleLanguage}
+              className="flex items-center gap-2 rounded-xl py-2 bg-white/80 dark:bg-gray-800/80 hover:bg-purple-50 dark:hover:bg-gray-700 border border-purple-100 dark:border-gray-700 shadow-sm transition-all"
+            >
+              <Globe className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+              <span className="text-sm">{language === "en" ? "العربية" : "English"}</span>
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="flex items-center gap-2 rounded-xl py-2 bg-white/80 dark:bg-gray-800/80 hover:bg-purple-50 dark:hover:bg-gray-700 border border-purple-100 dark:border-gray-700 shadow-sm transition-all"
+            >
+              {mounted && theme === "dark" ? (
+                <Sun className="h-4 w-4 text-amber-500" />
+              ) : (
+                <Moon className="h-4 w-4 text-indigo-500" />
+              )}
+              <span className="text-sm">{mounted && theme === "dark" ? "Light" : "Dark"}</span>
+            </Button>
+          </div>
         </div>
       </div>
     </>
