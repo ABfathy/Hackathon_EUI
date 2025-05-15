@@ -12,9 +12,14 @@ import { Toaster } from "@/components/ui/toaster"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Nismah (نِسمة) - Child Protection Platform",
-  description: "A comprehensive platform for child safety and protection",
-  generator: 'v0.dev'
+  title: "NISMA (نِسمة) - Child Protection Platform",
+  description: "A comprehensive platform for child safety and protection in Egypt",
+  generator: 'v0.dev',
+  icons: {
+    icon: '/nisma-logo.svg',
+    apple: '/nisma-logo.svg',
+    shortcut: '/nisma-logo.svg',
+  }
 }
 
 export default function RootLayout({

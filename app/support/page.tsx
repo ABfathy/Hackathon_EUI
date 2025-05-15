@@ -1,21 +1,22 @@
 'use client'
 
-import { useEffect, useState } from "react"
+import { useState, useEffect } from "react"
+import { useSession } from "next-auth/react"
+import { useRouter, usePathname, useSearchParams } from "next/navigation"
+import Link from "next/link"
+import { useLanguage } from "@/context/language-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
+import { BookOpen } from "lucide-react"
+import { ForumReply } from "@/components/forum/forum-reply"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { MessageCircle, Lock, Users, Send, Wind, Info, Video, Search, BookOpen } from "lucide-react"
-import { useLanguage } from "@/context/language-context"
-import { useSession } from "next-auth/react"
-import Link from "next/link"
+import { MessageCircle, Lock, Users, Send, Wind, Info, Video, Search } from "lucide-react"
 import { ForumSection } from "@/components/forum/forum-section"
 import { ForumPost } from "@/components/forum/forum-post"
-import { ForumReply } from "@/components/forum/forum-reply"
-import { useRouter, usePathname, useSearchParams } from "next/navigation"
 
 interface ForumSectionType {
   id: string
@@ -170,27 +171,6 @@ export default function SupportPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (status === "authenticated") {
-      fetchSections()
-    }
-  }, [status])
-
-  // Auto-select section if sectionId is in query
-  useEffect(() => {
-    if (sections.length > 0) {
-      const sectionId = searchParams.get("sectionId")
-      if (sectionId) {
-        const found = sections.find(s => s.id === sectionId)
-        if (found) {
-          setSelectedSection(found)
-          fetchPosts(found.id)
-        }
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sections, searchParams])
-
   const fetchSections = async () => {
     try {
       setIsLoading(true)
@@ -245,38 +225,13 @@ export default function SupportPage() {
     }
   }
 
-  const handleCreatePost = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!selectedSection || !newPostTitle || !newPostContent) return
-
-    try {
-      const response = await fetch("/api/forum/posts", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title: newPostTitle,
-          content: newPostContent,
-          sectionId: selectedSection.id,
-        }),
-      })
-
-      if (response.ok) {
-        setNewPostTitle("")
-        setNewPostContent("")
-        fetchPosts(selectedSection.id)
-      }
-    } catch (error) {
-      console.error("Error creating post:", error)
-    }
-  }
-
   const handleCreateReply = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedPost || !newReplyContent) return
 
     try {
+      setIsLoading(true)
+      setError(null)
       const response = await fetch("/api/forum/replies", {
         method: "POST",
         headers: {
@@ -288,16 +243,44 @@ export default function SupportPage() {
         }),
       })
 
-      if (response.ok) {
-        setNewReplyContent("")
-        fetchReplies(selectedPost.id)
+      if (!response.ok) {
+        throw new Error("Failed to create reply")
       }
+
+      // Reset form and reload replies
+      setNewReplyContent("")
+      fetchReplies(selectedPost.id)
     } catch (error) {
       console.error("Error creating reply:", error)
+      setError("Failed to create reply")
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  if (status === "loading" || isLoading) {
+  useEffect(() => {
+    if (status === "authenticated") {
+      fetchSections()
+    }
+  }, [status])
+
+  // Auto-select section if sectionId is in query
+  useEffect(() => {
+    if (sections.length > 0) {
+      const sectionId = searchParams.get("sectionId")
+      if (sectionId) {
+        const found = sections.find(s => s.id === sectionId)
+        if (found) {
+          setSelectedSection(found)
+          fetchPosts(found.id)
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sections, searchParams])
+
+  // Show loading state when checking authentication
+  if (status === "loading") {
     return (
       <div className="container mx-auto space-y-8 max-w-6xl">
         <div className="space-y-2">
@@ -311,6 +294,7 @@ export default function SupportPage() {
     )
   }
   
+  // If not authenticated, show login message
   if (status === "unauthenticated" || !session) {
     return (
       <div className="container mx-auto space-y-8 max-w-6xl">

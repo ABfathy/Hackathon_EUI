@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Home, BookOpen, AlertTriangle, MapPin, MessageCircle, Wind, Menu, Bot, Globe, LogIn, Moon, Sun, Languages, User, LogOut, Users } from "lucide-react"
+import { Home, BookOpen, AlertTriangle, MapPin, MessageCircle, Shield, Menu, Bot, Globe, LogIn, Moon, Sun, Languages, User, LogOut, Users } from "lucide-react"
 import { useLanguage } from "@/context/language-context"
 import { useTheme } from "next-themes"
 import { useSession, signOut } from "next-auth/react"
@@ -61,7 +61,7 @@ const navItems: NavItem[] = [
     title: "Security & Privacy",
     titleAr: "الأمان والخصوصية",
     href: "/security",
-    icon: <Wind className="h-5 w-5" />,
+    icon: <Shield className="h-5 w-5" />,
   },
 ]
 
@@ -184,7 +184,7 @@ export default function Sidebar() {
             <div className="p-6">
               <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
                 <div className="bg-yellow-200 dark:bg-gray-800/50 p-3 rounded-full animate-pulse">
-                  <Wind className="h-6 w-6 text-purple-600 dark:text-gray-300" />
+                  <Shield className="h-6 w-6 text-purple-600 dark:text-gray-300" />
                 </div>
                 {language === "en" ? (
                   <span className="text-purple-600 dark:text-gray-200">Nismah</span>
@@ -257,7 +257,7 @@ export default function Sidebar() {
         <div className="p-6">
           <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
             <div className="bg-yellow-200 dark:bg-gray-800/50 p-3 rounded-full animate-pulse">
-              <Wind className="h-6 w-6 text-purple-600 dark:text-gray-300" />
+              <Shield className="h-6 w-6 text-purple-600 dark:text-gray-300" />
             </div>
             {language === "en" ? (
               <span className="text-purple-600 dark:text-gray-200">Nismah</span>

@@ -1,18 +1,19 @@
 'use client'
 
+import { useSession } from "next-auth/react"
+import Link from "next/link"
+import { useLanguage } from "@/context/language-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Switch } from "@/components/ui/switch"
+import { Separator } from "@/components/ui/separator"
+import { AlertTriangle, Shield, Bot } from "lucide-react"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { Separator } from "@/components/ui/separator"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Lock, UserCheck, Eye, Bot, AlertTriangle, BookOpen } from "lucide-react"
-import { useLanguage } from "@/context/language-context"
-import { useSession } from "next-auth/react"
-import Link from "next/link"
+import { Lock, UserCheck, Eye } from "lucide-react"
 
 const translations = {
   en: {
@@ -156,7 +157,7 @@ export default function SecurityPage() {
         <Card className="border-purple-200 dark:border-gray-700 max-w-3xl mx-auto">
           <CardHeader className="bg-gradient-to-r from-purple-50 to-emerald-50 dark:from-gray-800/50 dark:to-gray-800/80 rounded-t-lg">
             <CardTitle className="text-purple-600 dark:text-gray-200 flex items-center gap-2">
-              <BookOpen className="h-5 w-5" />
+              <Shield className="h-5 w-5" />
               {language === "en" ? "Access Required" : "مطلوب تسجيل الدخول"}
             </CardTitle>
           </CardHeader>
@@ -189,7 +190,7 @@ export default function SecurityPage() {
       <Card className="bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800">
         <CardContent className="p-6 flex flex-col md:flex-row items-center gap-6">
           <div className="bg-white dark:bg-gray-800 p-4 rounded-full">
-            <AlertTriangle className="h-10 w-10 text-amber-600" />
+            <Shield className="h-10 w-10 text-amber-600" />
           </div>
           <div className="flex-1 space-y-2 text-center md:text-left">
             <h3 className="text-xl font-semibold">{t.securityReminder}</h3>

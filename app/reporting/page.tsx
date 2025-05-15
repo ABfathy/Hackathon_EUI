@@ -18,6 +18,7 @@ import { calculateAge } from "@/lib/utils"
 import { toast } from "@/components/ui/use-toast"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AlertCircle, MapPin } from "lucide-react"
+import Link from "next/link"
 
 const translations = {
   en: {
@@ -157,6 +158,59 @@ export default function ReportingPage() {
   const [alertRadius, setAlertRadius] = useState('5') // Default radius is 5km
   
   const userType = session?.user?.userType || null;
+
+  // Show loading state when checking authentication
+  if (status === "loading") {
+    return (
+      <div className="container mx-auto space-y-8 max-w-6xl">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight">{t.title}</h1>
+          <div className="flex items-center space-x-2 mt-4">
+            <div className="animate-spin h-5 w-5 border-2 border-purple-600 dark:border-purple-400 rounded-full border-t-transparent"></div>
+            <p className="text-muted-foreground">{language === "en" ? "Loading content..." : "جاري تحميل المحتوى..."}</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+  
+  // If not authenticated, show login message
+  if (status === "unauthenticated" || !session) {
+    return (
+      <div className="container mx-auto space-y-8 max-w-6xl">
+        <div className="space-y-4">
+          <h1 className="text-3xl font-bold tracking-tight">{t.title}</h1>
+          <p className="text-muted-foreground">{t.subtitle}</p>
+        </div>
+        <Card className="border-purple-200 dark:border-gray-700 max-w-3xl mx-auto">
+          <CardHeader className="bg-gradient-to-r from-purple-50 to-emerald-50 dark:from-gray-800/50 dark:to-gray-800/80 rounded-t-lg">
+            <CardTitle className="text-purple-600 dark:text-gray-200 flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5" />
+              {language === "en" ? "Access Required" : "مطلوب تسجيل الدخول"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <p className="mb-6">{language === "en" 
+              ? "Please sign in to access our reporting system. This feature is only available to authenticated users to ensure security and proper follow-up."
+              : "يرجى تسجيل الدخول للوصول إلى نظام الإبلاغ. هذه الميزة متاحة فقط للمستخدمين المصادق عليهم لضمان الأمان والمتابعة المناسبة."}</p>
+            <div className="flex justify-between items-center">
+              <Link href="/login">
+                <Button className="w-full sm:w-auto">
+                  {language === "en" ? "Sign In" : "تسجيل الدخول"}
+                </Button>
+              </Link>
+              <div className="flex items-center space-x-2">
+                <Phone className="h-4 w-4 text-purple-600" />
+                <p className="text-sm font-medium text-purple-600">
+                  {language === "en" ? "Emergency? Call 16000" : "حالة طوارئ؟ اتصل بـ 16000"}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
   
   // Function to fetch user details
   async function fetchUserDetails() {
