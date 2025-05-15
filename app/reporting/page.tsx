@@ -251,7 +251,7 @@ export default function ReportingPage() {
     } finally {
       setLoadingAlerts(false);
     }
-  }, [session, alertRadius, userLocation, setLoadingAlerts, setAlerts]);
+  }, [session, alertRadius, userLocation.latitude, userLocation.longitude, setLoadingAlerts, setAlerts]);
 
   // Moved useEffect for initial data fetching here (before conditional returns)
   useEffect(() => {
@@ -283,7 +283,7 @@ export default function ReportingPage() {
       setLocationDetected(false);
       fetchAlerts();
     }
-  }, [session, status, fetchUserDetails, fetchAlerts, setUserLocation, setLocationDetected]);
+  }, [session, status, fetchUserDetails, setUserLocation, setLocationDetected]);
 
   // Show loading state when checking authentication
   if (status === "loading") {
