@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge"
 import { AlertTriangle, CheckCircle, Clock, ExternalLink, FileText, Info, Phone, Wind } from "lucide-react"
 import { useLanguage } from "@/context/language-context"
 import { useSession } from "next-auth/react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { calculateAge } from "@/lib/utils"
 import { toast } from "@/components/ui/use-toast"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -21,6 +21,20 @@ import { AlertCircle, MapPin } from "lucide-react"
 import Link from "next/link"
 import LocationSearch from "@/components/location-search"
 import SafetyMap from "@/components/safety-map"
+
+// Moved calculateDistance outside the component for stability
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // Radius of the Earth in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2); 
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+  const distance = R * c; // Distance in km
+  return distance;
+}
 
 const translations = {
   en: {
@@ -161,6 +175,116 @@ export default function ReportingPage() {
   
   const userType = session?.user?.userType || null;
 
+  // Function to fetch user details - wrapped in useCallback
+  const fetchUserDetails = useCallback(async () => {
+    if (session?.user?.id) {
+      try {
+        const response = await fetch(`/api/users/${session.user.id}`);
+        if (response.ok) {
+          const userData = await response.json();
+          setUserDetails(userData);
+          if (userData.dateOfBirth) {
+            const userAge = calculateAge(userData.dateOfBirth);
+            setAge(userAge);
+          }
+        } else {
+          console.error("Failed to fetch user details");
+        }
+      } catch (error) {
+        console.error("Error fetching user details:", error);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      if (status !== 'loading') {
+        setLoading(false);
+      }
+    }
+  }, [session, status, setUserDetails, setAge, setLoading]);
+
+  // Function to fetch alerts from the API - wrapped in useCallback
+  const fetchAlerts = useCallback(async () => {
+    setLoadingAlerts(true);
+    try {
+      const params = new URLSearchParams();
+      if (session?.user && 'familyCode' in session.user && session.user.familyCode) {
+        params.append('familyCode', session.user.familyCode as string);
+      }
+      params.append('radius', alertRadius);
+      
+      if (userLocation.latitude && userLocation.longitude) {
+        params.append('latitude', userLocation.latitude.toString());
+        params.append('longitude', userLocation.longitude.toString());
+      }
+      
+      const response = await fetch(`/api/alerts?${params.toString()}`);
+      const data = await response.json();
+      
+      if (data.success && data.alerts) {
+        if (userLocation.latitude && userLocation.longitude) {
+          const sortedAlerts = [...data.alerts].sort((a, b) => {
+            const distA = calculateDistance(
+              userLocation.latitude as number, 
+              userLocation.longitude as number,
+              a.incident.latitude, 
+              a.incident.longitude
+            );
+            const distB = calculateDistance(
+              userLocation.latitude as number, 
+              userLocation.longitude as number,
+              b.incident.latitude, 
+              b.incident.longitude
+            );
+            return distA - distB;
+          });
+          setAlerts(sortedAlerts);
+        } else {
+          setAlerts(data.alerts);
+        }
+      } else {
+        console.error('Failed to fetch alerts:', data.error);
+        setAlerts([]);
+      }
+    } catch (error) {
+      console.error('Error fetching alerts:', error);
+      setAlerts([]);
+    } finally {
+      setLoadingAlerts(false);
+    }
+  }, [session, alertRadius, userLocation, setLoadingAlerts, setAlerts]);
+
+  // Moved useEffect for initial data fetching here (before conditional returns)
+  useEffect(() => {
+    if (session?.user?.id) {
+      fetchUserDetails();
+    } else {
+      if (status !== 'loading') {
+        setLoading(false);
+      }
+    }
+    
+    if (typeof navigator !== 'undefined' && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          });
+          setLocationDetected(true);
+          fetchAlerts();
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          setLocationDetected(false);
+          fetchAlerts();
+        }
+      );
+    } else {
+      setLocationDetected(false);
+      fetchAlerts();
+    }
+  }, [session, status, fetchUserDetails, fetchAlerts, setUserLocation, setLocationDetected]);
+
   // Show loading state when checking authentication
   if (status === "loading") {
     return (
@@ -212,139 +336,6 @@ export default function ReportingPage() {
         </Card>
       </div>
     )
-  }
-  
-  // Function to fetch user details
-  async function fetchUserDetails() {
-    if (session?.user?.id) {
-      try {
-        const response = await fetch(`/api/users/${session.user.id}`);
-        if (response.ok) {
-          const userData = await response.json();
-          setUserDetails(userData);
-          if (userData.dateOfBirth) {
-            const userAge = calculateAge(userData.dateOfBirth);
-            setAge(userAge);
-          }
-        } else {
-          console.error("Failed to fetch user details");
-        }
-      } catch (error) {
-        console.error("Error fetching user details:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-  }
-
-  useEffect(() => {
-    if (session?.user?.email) {
-      fetchUserDetails()
-    } else {
-      setLoading(false)
-    }
-    
-    // Get user's location if available
-    if (typeof navigator !== 'undefined' && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude
-          })
-          setLocationDetected(true)
-          // You could use a reverse geocoding service here to get the address
-          // For now, we'll just use the coordinates
-          
-          // Fetch alerts once we have the user's location
-          fetchAlerts()
-        },
-        (error) => {
-          console.error('Error getting location:', error)
-          // Still fetch alerts even if we couldn't get the location
-          fetchAlerts()
-        }
-      )
-    } else {
-      // Fetch alerts even if geolocation is not available
-      fetchAlerts()
-    }
-  }, [session])
-
-  // Function to fetch alerts from the API
-  async function fetchAlerts() {
-    setLoadingAlerts(true)
-    try {
-      // Build query parameters
-      const params = new URLSearchParams()
-      if (session?.user && 'familyCode' in session.user && session.user.familyCode) {
-        params.append('familyCode', session.user.familyCode as string)
-      }
-      params.append('radius', alertRadius)
-      
-      // Add coordinates if available for location-based filtering
-      if (userLocation.latitude && userLocation.longitude) {
-        params.append('latitude', userLocation.latitude.toString())
-        params.append('longitude', userLocation.longitude.toString())
-      }
-      
-      const response = await fetch(`/api/alerts?${params.toString()}`)
-      const data = await response.json()
-      
-      if (data.success && data.alerts) {
-        // Sort alerts by proximity to user if location is available
-        if (userLocation.latitude && userLocation.longitude) {
-          const sortedAlerts = [...data.alerts].sort((a, b) => {
-            // Calculate distance from user to alert a
-            const distA = calculateDistance(
-              userLocation.latitude as number, 
-              userLocation.longitude as number,
-              a.incident.latitude, 
-              a.incident.longitude
-            );
-            
-            // Calculate distance from user to alert b
-            const distB = calculateDistance(
-              userLocation.latitude as number, 
-              userLocation.longitude as number,
-              b.incident.latitude, 
-              b.incident.longitude
-            );
-            
-            // Sort by distance (closest first)
-            return distA - distB;
-          });
-          
-          setAlerts(sortedAlerts);
-        } else {
-          setAlerts(data.alerts);
-        }
-      } else {
-        console.error('Failed to fetch alerts:', data.error)
-        // Set empty array if there's an error
-        setAlerts([])
-      }
-    } catch (error) {
-      console.error('Error fetching alerts:', error)
-      // Set empty array if there's an error
-      setAlerts([])
-    } finally {
-      setLoadingAlerts(false)
-    }
-  }
-  
-  // Calculate distance between two points using Haversine formula
-  function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-    const R = 6371; // Radius of the Earth in km
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-      Math.sin(dLon/2) * Math.sin(dLon/2); 
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-    const distance = R * c; // Distance in km
-    return distance;
   }
   
   // Function to handle changing the alert radius
