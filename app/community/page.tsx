@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { MapPin, Bell, Video, FileText, Users, Search, Calendar, ExternalLink, ChevronDown } from "lucide-react"
+import { MapPin, Bell, Video, FileText, Users, Search, Calendar, ExternalLink, ChevronDown, X } from "lucide-react"
 import { useLanguage } from "@/context/language-context"
 import SafetyMap from "@/components/safety-map"
 import { useState, useEffect, useRef } from "react"
@@ -127,7 +127,46 @@ export default function CommunityPage() {
   const [hasMore, setHasMore] = useState(true)
   const alertsContainerRef = useRef<HTMLDivElement>(null)
   
-  // Fetch alerts from the API
+  // Add filter state and handlers
+  // State for alerts filtering
+  const [filterOpen, setFilterOpen] = useState(false)
+  const [filterType, setFilterType] = useState<string>('ALL')
+  const [filterResolved, setFilterResolved] = useState<boolean | null>(null)
+  const [filteredAlerts, setFilteredAlerts] = useState<any[]>([])
+  const [filterLocation, setFilterLocation] = useState<string>('')
+  
+  // Apply filters to alerts and update visible alerts
+  useEffect(() => {
+    if (!alerts.length) return;
+    
+    // Apply filters
+    let filtered = [...alerts];
+    
+    // Filter by type
+    if (filterType !== 'ALL') {
+      filtered = filtered.filter(alert => alert.incident.type === filterType);
+    }
+    
+    // Filter by resolution status
+    if (filterResolved !== null) {
+      filtered = filtered.filter(alert => alert.isResolved === filterResolved);
+    }
+
+    // Filter by location (if specified)
+    if (filterLocation.trim() !== '') {
+      filtered = filtered.filter(alert => 
+        alert.incident.location.toLowerCase().includes(filterLocation.toLowerCase())
+      );
+    }
+    
+    // Update filtered and visible alerts
+    setFilteredAlerts(filtered);
+    const initialCount = Math.min(visibleCount, filtered.length);
+    setVisibleAlerts(filtered.slice(0, initialCount));
+    setHasMore(filtered.length > initialCount);
+  }, [alerts, filterType, filterResolved, filterLocation, visibleCount]);
+
+  // Update the fetchAlerts function to set filteredAlerts
   useEffect(() => {
     async function fetchAlerts() {
       try {
@@ -211,6 +250,7 @@ export default function CommunityPage() {
         });
         
         setAlerts(allAlerts)
+        setFilteredAlerts(allAlerts)
         
         // Set initial visible alerts
         const initialCount = Math.min(visibleCount, allAlerts.length);
@@ -237,6 +277,7 @@ export default function CommunityPage() {
           }
         ]
         setAlerts(fallbackData)
+        setFilteredAlerts(fallbackData)
         setVisibleAlerts(fallbackData)
         setHasMore(false)
         setLoading(false)
@@ -246,17 +287,34 @@ export default function CommunityPage() {
     fetchAlerts()
   }, [])
 
-  // Add this function to load more alerts
+  // Update loadMoreAlerts to use filteredAlerts instead of alerts
   const loadMoreAlerts = () => {
     const nextCount = visibleCount + 3;
-    const newVisibleAlerts = alerts.slice(0, nextCount);
+    const newVisibleAlerts = filteredAlerts.slice(0, nextCount);
     
     // Add a small delay to simulate loading for better UX
     setTimeout(() => {
       setVisibleAlerts(newVisibleAlerts);
       setVisibleCount(nextCount);
-      setHasMore(nextCount < alerts.length);
+      setHasMore(nextCount < filteredAlerts.length);
     }, 500);
+  };
+
+  // Handle filter change
+  const handleFilterChange = (type: string, resolved: boolean | null) => {
+    setFilterType(type);
+    setFilterResolved(resolved);
+    setVisibleCount(3); // Reset visible count when filter changes
+    setFilterOpen(false);
+  };
+
+  // Handle filter reset
+  const handleFilterReset = () => {
+    setFilterType('ALL');
+    setFilterResolved(null);
+    setFilterLocation('');
+    setVisibleCount(3);
+    setFilterOpen(false);
   };
 
   return (
@@ -303,9 +361,162 @@ export default function CommunityPage() {
             <div className="mt-6 space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="font-medium">{t.recentAlerts}</h3>
-                <Badge variant="outline" className="text-xs">
-                  {alerts.length} {language === 'en' ? 'reports' : 'تقارير'}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-xs">
+                    {filterType !== 'ALL' || filterResolved !== null ? (
+                      <span className="flex items-center">
+                        {language === 'en' ? 'Filtered' : 'تمت التصفية'} ({filteredAlerts.length})
+                      </span>
+                    ) : (
+                      <span>{alerts.length} {language === 'en' ? 'reports' : 'تقارير'}</span>
+                    )}
+                  </Badge>
+                  <div className="relative">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setFilterOpen(!filterOpen)}
+                      className="flex items-center gap-1 h-8"
+                    >
+                      <Search className="h-3.5 w-3.5" />
+                      {filterOpen ? 
+                        (language === 'en' ? 'Close Filters' : 'إغلاق الفلاتر') : 
+                        (language === 'en' ? 'Filter' : 'تصفية')}
+                    </Button>
+                    
+                    {filterOpen && (
+                      <div className="absolute top-full right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border p-4 z-10 animate-fadeIn w-72 sm:w-80">
+                        <div className="space-y-4">
+                          <div>
+                            <h4 className="text-sm font-medium mb-2">{language === 'en' ? 'Filter by Type' : 'تصفية حسب النوع'}</h4>
+                            <div className="grid grid-cols-2 gap-2">
+                              <Button 
+                                variant={filterType === 'ALL' ? "default" : "outline"} 
+                                size="sm" 
+                                onClick={() => handleFilterChange('ALL', filterResolved)}
+                                className="w-full"
+                              >
+                                {language === 'en' ? 'All Types' : 'كل الأنواع'}
+                              </Button>
+                              <Button 
+                                variant={filterType === 'PHYSICAL_ABUSE' ? "default" : "outline"} 
+                                size="sm" 
+                                onClick={() => handleFilterChange('PHYSICAL_ABUSE', filterResolved)}
+                                className="w-full"
+                              >
+                                {language === 'en' ? 'Physical Abuse' : 'إساءة جسدية'}
+                              </Button>
+                              <Button 
+                                variant={filterType === 'NEGLECT' ? "default" : "outline"} 
+                                size="sm" 
+                                onClick={() => handleFilterChange('NEGLECT', filterResolved)}
+                                className="w-full"
+                              >
+                                {language === 'en' ? 'Neglect' : 'إهمال'}
+                              </Button>
+                              <Button 
+                                variant={filterType === 'OTHER' ? "default" : "outline"} 
+                                size="sm" 
+                                onClick={() => handleFilterChange('OTHER', filterResolved)}
+                                className="w-full"
+                              >
+                                {language === 'en' ? 'Other' : 'أخرى'}
+                              </Button>
+                              <Button 
+                                variant={filterType === 'SEXUAL_ABUSE' ? "default" : "outline"} 
+                                size="sm" 
+                                onClick={() => handleFilterChange('SEXUAL_ABUSE', filterResolved)}
+                                className="w-full"
+                              >
+                                {language === 'en' ? 'Sexual Abuse' : 'إساءة جنسية'}
+                              </Button>
+                              <Button 
+                                variant={filterType === 'PSYCHOLOGICAL_ABUSE' ? "default" : "outline"} 
+                                size="sm" 
+                                onClick={() => handleFilterChange('PSYCHOLOGICAL_ABUSE', filterResolved)}
+                                className="w-full"
+                              >
+                                {language === 'en' ? 'Psychological' : 'إساءة نفسية'}
+                              </Button>
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <h4 className="text-sm font-medium mb-2">{language === 'en' ? 'Filter by Location' : 'تصفية حسب الموقع'}</h4>
+                            <div className="relative">
+                              <Input 
+                                placeholder={language === 'en' ? "Enter location..." : "أدخل الموقع..."}
+                                value={filterLocation}
+                                onChange={(e) => setFilterLocation(e.target.value)}
+                                className="mb-3"
+                              />
+                              {filterLocation && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="absolute right-1 top-1 h-7 w-7 p-0"
+                                  onClick={() => setFilterLocation('')}
+                                >
+                                  <span className="sr-only">Clear</span>
+                                  <X className="h-3.5 w-3.5" />
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <h4 className="text-sm font-medium mb-2">{language === 'en' ? 'Filter by Status' : 'تصفية حسب الحالة'}</h4>
+                            <div className="grid grid-cols-3 gap-2">
+                              <Button 
+                                variant={filterResolved === null ? "default" : "outline"} 
+                                size="sm" 
+                                onClick={() => handleFilterChange(filterType, null)}
+                                className="w-full"
+                              >
+                                {language === 'en' ? 'All' : 'الكل'}
+                              </Button>
+                              <Button 
+                                variant={filterResolved === false ? "default" : "outline"} 
+                                size="sm" 
+                                onClick={() => handleFilterChange(filterType, false)}
+                                className="w-full"
+                              >
+                                {language === 'en' ? 'Active' : 'نشط'}
+                              </Button>
+                              <Button 
+                                variant={filterResolved === true ? "default" : "outline"} 
+                                size="sm" 
+                                onClick={() => handleFilterChange(filterType, true)}
+                                className="w-full"
+                              >
+                                {language === 'en' ? 'Resolved' : 'تم الحل'}
+                              </Button>
+                            </div>
+                          </div>
+                          
+                          <div className="flex justify-between pt-2">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={handleFilterReset}
+                              className="text-xs"
+                            >
+                              {language === 'en' ? 'Reset' : 'إعادة تعيين'}
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => setFilterOpen(false)}
+                              className="text-xs"
+                            >
+                              {language === 'en' ? 'Apply' : 'تطبيق'}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <div ref={alertsContainerRef} className="space-y-3">
@@ -388,11 +599,6 @@ export default function CommunityPage() {
                   </>
                 )}
               </div>
-            </div>
-
-            <div className="flex justify-center gap-4 mt-4">
-              <Button variant="outline">{t.filterAlerts}</Button>
-              <Button onClick={() => window.location.href = '/reporting'}>{t.reportNewConcern}</Button>
             </div>
           </div>
         </TabsContent>

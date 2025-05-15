@@ -313,6 +313,17 @@ export default function ReportingPage() {
     fetchAlerts()
   }
   
+  // Function to reset alert filters
+  function handleResetAlertFilters() {
+    setAlertRadius('5') // Reset to default radius
+    fetchAlerts()
+    toast({
+      title: "Filters reset",
+      description: "Alert radius has been reset to 5km",
+      variant: "default"
+    })
+  }
+  
   async function handleSubmitReport(e: React.FormEvent) {
     e.preventDefault()
     
@@ -456,10 +467,9 @@ export default function ReportingPage() {
       </Card>
 
       <Tabs defaultValue="report" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="report">{t.reportIncident}</TabsTrigger>
           <TabsTrigger value="alerts">{t.alertSystem}</TabsTrigger>
-          <TabsTrigger value="guide">{t.reportingGuide}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="report" className="space-y-6 pt-6">
@@ -571,14 +581,6 @@ export default function ReportingPage() {
 
         {userType === 'PARENT' && (
           <TabsContent value="alerts" className="space-y-6 pt-6">
-            <div className="mb-6">
-              <SafetyMap 
-                alerts={alerts} 
-                userLocation={userLocation}
-                radius={alertRadius}
-                loading={loadingAlerts}
-              />
-            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
@@ -721,9 +723,17 @@ export default function ReportingPage() {
                     </div>
                   </div>
                 </CardContent>
-                <CardFooter>
+                <CardFooter className="flex flex-col sm:flex-row gap-3">
                   <Button 
-                    className="w-full"
+                    variant="outline" 
+                    size="sm"
+                    onClick={handleResetAlertFilters}
+                    className="w-full sm:w-auto order-2 sm:order-1"
+                  >
+                    {language === 'en' ? 'Reset Filters' : 'إعادة تعيين المرشحات'}
+                  </Button>
+                  <Button 
+                    className="w-full sm:w-auto order-1 sm:order-2"
                     onClick={() => {
                       toast({
                         title: "Preferences saved",
@@ -739,29 +749,6 @@ export default function ReportingPage() {
             </div>
           </TabsContent>
         )}
-        
-
-
-        <TabsContent value="guide" className="space-y-6 pt-6">
-          <div className="space-y-4">
-            <h2 className="text-2xl font-semibold">{t.stepByStep}</h2>
-            <p className="text-muted-foreground">{t.guideDescription}</p>
-          </div>
-
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-4">
-                <div className="bg-purple-100 dark:bg-gray-800 p-2 rounded-full">
-                  <AlertTriangle className="h-6 w-6 text-purple-600" />
-                </div>
-                <CardTitle>{t.step1}</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p>{getAgeSpecificStep1Description()}</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
     </div>
   )

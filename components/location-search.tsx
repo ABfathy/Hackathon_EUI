@@ -383,7 +383,11 @@ export default function LocationSearch({
           
           <Dialog open={mapOpen} onOpenChange={setMapOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" type="button">
+              <Button 
+                variant="outline" 
+                type="button"
+                className="relative overflow-hidden min-w-[70px] focus-visible:ring-offset-0"
+              >
                 <MapPin className="h-4 w-4 mr-2" />
                 <span>Map</span>
               </Button>
@@ -413,6 +417,7 @@ export default function LocationSearch({
                     size="icon"
                     onClick={handleUseCurrentPosition}
                     title="Use my current location"
+                    className="flex-shrink-0 focus-visible:ring-offset-0"
                   >
                     <Target className="h-4 w-4" />
                   </Button>
