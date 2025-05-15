@@ -1,48 +1,42 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client-js"
-  output   = "../lib/generated/prisma"
+  provider      = "prisma-client-js"
+  output        = "../lib/generated/prisma"
   binaryTargets = ["native", "windows", "darwin-arm64"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id            String       @id @default(cuid())
-  name          String
-  email         String       @unique
-  password      String
-  userType      UserType
-  phoneNumber   String?
-  dateOfBirth   DateTime?
-  familyCode    String?
-  parentEmail   String?
-  parentPhone   String?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  family        Family?      @relation(fields: [familyCode], references: [code])
-  children      User[]       @relation("ParentChild")
-  parent        User?        @relation("ParentChild", fields: [parentEmail], references: [email])
-  posts         ForumPost[]
-  replies       ForumReply[]
-  incidents     Incident[]
+  id          String       @id @default(cuid())
+  name        String
+  email       String       @unique
+  password    String
+  userType    UserType
+  phoneNumber String?
+  dateOfBirth DateTime?
+  familyCode  String?
+  parentEmail String?
+  parentPhone String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  posts       ForumPost[]
+  replies     ForumReply[]
+  incidents   Incident[]
+  family      Family?      @relation(fields: [familyCode], references: [code])
+  parent      User?        @relation("ParentChild", fields: [parentEmail], references: [email])
+  children    User[]       @relation("ParentChild")
 }
 
 model Family {
   code      String   @id
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  members   User[]
   alerts    Alert[]
+  members   User[]
 }
 
 model ForumSection {
@@ -56,16 +50,16 @@ model ForumSection {
 }
 
 model ForumPost {
-  id          String      @id @default(cuid())
-  title       String
-  content     String
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  author      User        @relation(fields: [authorId], references: [id])
-  authorId    String
-  section     ForumSection @relation(fields: [sectionId], references: [id])
-  sectionId   String
-  replies     ForumReply[]
+  id        String       @id @default(cuid())
+  title     String
+  content   String
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  authorId  String
+  sectionId String
+  author    User         @relation(fields: [authorId], references: [id])
+  section   ForumSection @relation(fields: [sectionId], references: [id])
+  replies   ForumReply[]
 }
 
 model ForumReply {
@@ -73,15 +67,14 @@ model ForumReply {
   content   String
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-  author    User      @relation(fields: [authorId], references: [id])
   authorId  String
-  post      ForumPost @relation(fields: [postId], references: [id])
   postId    String
+  author    User      @relation(fields: [authorId], references: [id])
+  post      ForumPost @relation(fields: [postId], references: [id])
 }
 
-// Incident reporting models
 model Incident {
-  id          String        @id @default(cuid())
+  id          String       @id @default(cuid())
   type        IncidentType
   location    String
   latitude    Float?
@@ -90,22 +83,22 @@ model Incident {
   description String
   name        String?
   contact     String?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
   reporterId  String?
-  reporter    User?         @relation(fields: [reporterId], references: [id])
   alert       Alert?
+  reporter    User?        @relation(fields: [reporterId], references: [id])
 }
 
 model Alert {
-  id          String   @id @default(cuid())
-  incidentId  String   @unique
-  incident    Incident @relation(fields: [incidentId], references: [id])
-  familyId    String?
-  family      Family?  @relation(fields: [familyId], references: [code])
-  isResolved  Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  incidentId String   @unique
+  familyId   String?
+  isResolved Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  family     Family?  @relation(fields: [familyId], references: [code])
+  incident   Incident @relation(fields: [incidentId], references: [id])
 }
 
 enum SectionType {
@@ -122,48 +115,8 @@ enum IncidentType {
   OTHER
 }
 
-model ForumSection {
-  id          String      @id @default(cuid())
-  name        String
-  description String
-  type        SectionType
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  posts       ForumPost[]
-}
-
-model ForumPost {
-  id          String      @id @default(cuid())
-  title       String
-  content     String
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  author      User        @relation(fields: [authorId], references: [id])
-  authorId    String
-  section     ForumSection @relation(fields: [sectionId], references: [id])
-  sectionId   String
-  replies     ForumReply[]
-}
-
-model ForumReply {
-  id        String    @id @default(cuid())
-  content   String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  author    User      @relation(fields: [authorId], references: [id])
-  authorId  String
-  post      ForumPost @relation(fields: [postId], references: [id])
-  postId    String
-}
-
 enum UserType {
   PARENT
   CHILD
   INDEPENDENT_CHILD
-}
-
-enum SectionType {
-  PARENTS_ONLY
-  TEENS_ONLY
-  BOTH
 }

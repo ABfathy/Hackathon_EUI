@@ -401,7 +401,14 @@ export default function SupportPage() {
         <div className="lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle>{t.supportForums}</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>{t.supportForums}</CardTitle>
+                {session?.user?.userType === "PARENT" && (
+                  <Button onClick={() => router.push('/support/create-section')}>
+                    Create New Forum
+                  </Button>
+                )}
+              </div>
               <CardDescription>
                 {t.chatroomsDescription}
               </CardDescription>
