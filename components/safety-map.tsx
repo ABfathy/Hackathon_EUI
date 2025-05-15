@@ -128,11 +128,37 @@ export default function SafetyMap({
         if (isNaN(latitude) || isNaN(longitude)) return;
         
         // Determine marker color based on incident type
-        const markerColor = alert.isResolved 
-          ? '#10b981' // Green for resolved
-          : (incident.type === 'NEGLECT' || incident.type === 'OTHER') 
-            ? '#f59e0b' // Amber for neglect/other
-            : '#ef4444' // Red for most alerts
+        let markerColor = '#ef4444'; // Default red
+        let incidentIcon = AlertTriangle;
+        
+        if (alert.isResolved) {
+          markerColor = '#10b981'; // Green for resolved
+          incidentIcon = CheckCircle;
+        } else {
+          // Colors for different incident types
+          switch(incident.type) {
+            case 'PHYSICAL_ABUSE':
+              markerColor = '#ef4444'; // Red
+              break;
+            case 'SEXUAL_ABUSE':
+              markerColor = '#7c3aed'; // Purple
+              break;
+            case 'NEGLECT':
+              markerColor = '#f59e0b'; // Amber
+              break;
+            case 'EMOTIONAL_ABUSE':
+              markerColor = '#ec4899'; // Pink
+              break;
+            case 'PSYCHOLOGICAL_ABUSE':
+              markerColor = '#8b5cf6'; // Violet
+              break;
+            case 'OTHER':
+              markerColor = '#6366f1'; // Indigo
+              break;
+            default:
+              markerColor = '#ef4444'; // Red default
+          }
+        }
         
         // Create marker
         const marker = new window.google.maps.Marker({

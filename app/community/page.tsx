@@ -540,15 +540,58 @@ export default function CommunityPage() {
                           let iconColor = 'text-red-500';
                           let badgeVariant = 'destructive';
                           let badgeText = t.highRisk;
+                          let badgeCustomClass = '';
                           
                           if (alert.isResolved) {
                             iconColor = 'text-green-500';
                             badgeVariant = 'outline';
                             badgeText = language === 'en' ? 'Resolved' : 'تم الحل';
-                          } else if (incident.type === 'NEGLECT' || incident.type === 'OTHER') {
-                            iconColor = 'text-amber-500';
-                            badgeVariant = 'outline';
-                            badgeText = t.mediumRisk;
+                            badgeCustomClass = 'bg-green-50 text-green-600 border-green-200';
+                          } else {
+                            // Colors and texts based on incident type
+                            switch(incident.type) {
+                              case 'PHYSICAL_ABUSE':
+                                iconColor = 'text-red-500';
+                                badgeVariant = 'destructive';
+                                badgeText = language === 'en' ? 'Physical Abuse' : 'إساءة جسدية';
+                                badgeCustomClass = '';
+                                break;
+                              case 'SEXUAL_ABUSE':
+                                iconColor = 'text-purple-600';
+                                badgeVariant = 'outline';
+                                badgeText = language === 'en' ? 'Sexual Abuse' : 'إساءة جنسية';
+                                badgeCustomClass = 'bg-purple-50 text-purple-600 border-purple-200';
+                                break;
+                              case 'NEGLECT':
+                                iconColor = 'text-amber-500';
+                                badgeVariant = 'outline';
+                                badgeText = language === 'en' ? 'Neglect' : 'إهمال';
+                                badgeCustomClass = 'bg-amber-50 text-amber-600 border-amber-200';
+                                break;
+                              case 'EMOTIONAL_ABUSE':
+                                iconColor = 'text-pink-500';
+                                badgeVariant = 'outline';
+                                badgeText = language === 'en' ? 'Emotional Abuse' : 'إساءة عاطفية';
+                                badgeCustomClass = 'bg-pink-50 text-pink-600 border-pink-200';
+                                break;
+                              case 'PSYCHOLOGICAL_ABUSE':
+                                iconColor = 'text-violet-500';
+                                badgeVariant = 'outline';
+                                badgeText = language === 'en' ? 'Psychological' : 'إساءة نفسية';
+                                badgeCustomClass = 'bg-violet-50 text-violet-600 border-violet-200';
+                                break;
+                              case 'OTHER':
+                                iconColor = 'text-indigo-500';
+                                badgeVariant = 'outline';
+                                badgeText = language === 'en' ? 'Other' : 'أخرى';
+                                badgeCustomClass = 'bg-indigo-50 text-indigo-600 border-indigo-200';
+                                break;
+                              default:
+                                iconColor = 'text-red-500';
+                                badgeVariant = 'destructive';
+                                badgeText = t.highRisk;
+                                break;
+                            }
                           }
                           
                           return (
@@ -561,7 +604,10 @@ export default function CommunityPage() {
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <h4 className="text-sm font-medium">{incident.location}</h4>
-                                  <Badge variant={badgeVariant as any} className="text-xs">
+                                  <Badge 
+                                    variant={badgeVariant as any} 
+                                    className={`text-xs ${badgeCustomClass}`}
+                                  >
                                     {badgeText}
                                   </Badge>
                                   {isNew && (

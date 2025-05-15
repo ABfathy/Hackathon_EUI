@@ -356,12 +356,70 @@ export default function ReportingPage() {
   // Function to reset alert filters
   function handleResetAlertFilters() {
     setAlertRadius('5') // Reset to default radius
-    fetchAlerts()
-    toast({
-      title: "Filters reset",
-      description: "Alert radius has been reset to 5km",
-      variant: "default"
-    })
+    
+    // Also reset any other filters that might be added in the future
+    const params = new URLSearchParams()
+    if (session?.user && 'familyCode' in session.user && session.user.familyCode) {
+      params.append('familyCode', session.user.familyCode as string)
+    }
+    params.append('radius', '5') // Use default radius
+    
+    // Add coordinates if available
+    if (userLocation.latitude && userLocation.longitude) {
+      params.append('latitude', userLocation.latitude.toString())
+      params.append('longitude', userLocation.longitude.toString())
+    }
+    
+    // Reset to include all incidents with no filtering
+    params.append('includeAll', 'true')
+    
+    // Fetch all alerts with no filtering
+    setLoadingAlerts(true)
+    fetch(`/api/alerts?${params.toString()}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success && data.alerts) {
+          // Sort alerts by proximity if location available
+          if (userLocation.latitude && userLocation.longitude) {
+            const sortedAlerts = [...data.alerts].sort((a, b) => {
+              const distA = calculateDistance(
+                userLocation.latitude as number, 
+                userLocation.longitude as number,
+                a.incident.latitude, 
+                a.incident.longitude
+              );
+              
+              const distB = calculateDistance(
+                userLocation.latitude as number, 
+                userLocation.longitude as number,
+                b.incident.latitude, 
+                b.incident.longitude
+              );
+              
+              return distA - distB;
+            });
+            
+            setAlerts(sortedAlerts);
+          } else {
+            setAlerts(data.alerts);
+          }
+        } else {
+          console.error('Failed to fetch alerts:', data.error)
+          setAlerts([])
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching alerts:', error)
+        setAlerts([])
+      })
+      .finally(() => {
+        setLoadingAlerts(false)
+        toast({
+          title: "Filters reset",
+          description: "All filters have been reset to show all incidents",
+          variant: "default"
+        })
+      })
   }
   
   async function handleSubmitReport(e: React.FormEvent) {
