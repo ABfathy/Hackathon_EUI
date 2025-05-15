@@ -165,3 +165,19 @@ html[dir="rtl"] .ml-auto {
   margin-left: 0;
   margin-right: auto;
 }
+
+/* Add the fade-in animation at the end of the file */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-in-out forwards;
+}

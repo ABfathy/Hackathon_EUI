@@ -19,6 +19,8 @@ import { toast } from "@/components/ui/use-toast"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AlertCircle, MapPin } from "lucide-react"
 import Link from "next/link"
+import LocationSearch from "@/components/location-search"
+import SafetyMap from "@/components/safety-map"
 
 const translations = {
   en: {
@@ -280,16 +282,26 @@ export default function ReportingPage() {
       }
       params.append('radius', alertRadius)
       
+      // Add coordinates if available for location-based filtering
+      if (userLocation.latitude && userLocation.longitude) {
+        params.append('latitude', userLocation.latitude.toString())
+        params.append('longitude', userLocation.longitude.toString())
+      }
+      
       const response = await fetch(`/api/alerts?${params.toString()}`)
       const data = await response.json()
       
-      if (data.success) {
+      if (data.success && data.alerts) {
         setAlerts(data.alerts)
       } else {
         console.error('Failed to fetch alerts:', data.error)
+        // Set empty array if there's an error
+        setAlerts([])
       }
     } catch (error) {
       console.error('Error fetching alerts:', error)
+      // Set empty array if there's an error
+      setAlerts([])
     } finally {
       setLoadingAlerts(false)
     }
@@ -486,30 +498,25 @@ export default function ReportingPage() {
                   )}
                 </div>
 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="location" className={errors.location ? "text-red-500" : ""}>{t.location} *</Label>
-                    {locationDetected && (
-                      <div className="flex items-center text-xs text-emerald-600">
-                        <MapPin className="h-3 w-3 mr-1" />
-                        <span>Location detected</span>
-                      </div>
-                    )}
-                  </div>
-                  <Input 
-                    id="location" 
-                    placeholder={locationDetected ? `${userLocation.latitude?.toFixed(4)}, ${userLocation.longitude?.toFixed(4)}` : t.locationPlaceholder}
-                    value={location}
-                    onChange={(e) => {
-                      setLocation(e.target.value);
-                      setErrors({...errors, location: false});
-                    }}
-                    className={errors.location ? "border-red-500 ring-red-500" : ""}
-                  />
-                  {errors.location && (
-                    <p className="text-xs text-red-500 mt-1">Please enter a location</p>
-                  )}
-                </div>
+                <LocationSearch
+                  value={location}
+                  onChange={(value) => {
+                    setLocation(value);
+                    setErrors({...errors, location: false});
+                  }}
+                  onCoordinatesChange={(lat, lng) => {
+                    setUserLocation({
+                      latitude: lat,
+                      longitude: lng
+                    });
+                  }}
+                  userLocation={userLocation}
+                  label={t.location}
+                  placeholder={t.locationPlaceholder}
+                  required={true}
+                  error={errors.location}
+                  errorMessage="Please enter a location"
+                />
 
                 <div className="space-y-2">
                   <Label htmlFor="description" className={errors.description ? "text-red-500" : ""}>{t.description} *</Label>
@@ -564,6 +571,14 @@ export default function ReportingPage() {
 
         {userType === 'PARENT' && (
           <TabsContent value="alerts" className="space-y-6 pt-6">
+            <div className="mb-6">
+              <SafetyMap 
+                alerts={alerts} 
+                userLocation={userLocation}
+                radius={alertRadius}
+                loading={loadingAlerts}
+              />
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>

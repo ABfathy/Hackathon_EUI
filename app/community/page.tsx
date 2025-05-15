@@ -7,10 +7,10 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { MapPin, Bell, Video, FileText, Users, Search, Calendar, ExternalLink } from "lucide-react"
+import { MapPin, Bell, Video, FileText, Users, Search, Calendar, ExternalLink, ChevronDown } from "lucide-react"
 import { useLanguage } from "@/context/language-context"
 import SafetyMap from "@/components/safety-map"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 
 const translations = {
   en: {
@@ -121,6 +121,12 @@ export default function CommunityPage() {
   const [alerts, setAlerts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   
+  // State for incremental alert loading
+  const [visibleAlerts, setVisibleAlerts] = useState<any[]>([])
+  const [visibleCount, setVisibleCount] = useState(3)
+  const [hasMore, setHasMore] = useState(true)
+  const alertsContainerRef = useRef<HTMLDivElement>(null)
+  
   // Fetch alerts from the API
   useEffect(() => {
     async function fetchAlerts() {
@@ -130,66 +136,87 @@ export default function CommunityPage() {
         const response = await fetch('/api/incidents')
         const data = await response.json()
         
-        if (data.success && data.alerts) {
+        let allAlerts = []
+        
+        if (data.success && data.alerts && data.alerts.length > 0) {
           // Transform the API data to match our expected format
-          const formattedAlerts = data.alerts.map((alert: any) => ({
-            id: alert.id,
-            incident: {
-              ...alert.incident,
-              // Add default coordinates if none are provided
-              latitude: alert.incident.latitude || 30.0444 + (Math.random() * 0.01 - 0.005),
-              longitude: alert.incident.longitude || 31.2357 + (Math.random() * 0.01 - 0.005)
-            },
-            isResolved: alert.isResolved || false
-          }))
-          
-          setAlerts(formattedAlerts)
+          allAlerts = data.alerts.map((alert: any) => {
+            // Ensure we have valid coordinates
+            const hasCoordinates = 
+              alert.incident.latitude !== null && 
+              alert.incident.longitude !== null;
+            
+            // Generate random coordinates near Cairo if none are provided
+            const randomLat = 30.0444 + (Math.random() * 0.01 - 0.005);
+            const randomLng = 31.2357 + (Math.random() * 0.01 - 0.005);
+            
+            return {
+              id: alert.id,
+              incident: {
+                ...alert.incident,
+                latitude: hasCoordinates ? parseFloat(alert.incident.latitude) : randomLat,
+                longitude: hasCoordinates ? parseFloat(alert.incident.longitude) : randomLng
+              },
+              isResolved: alert.isResolved || false
+            };
+          })
         } else {
           // If API fails or returns no data, use sample data
-          const sampleData = [
-    {
-      id: '1',
-      incident: {
-        id: '1',
-        type: 'PHYSICAL_ABUSE',
-        location: 'Central Park Area',
-        latitude: 30.0444,
-        longitude: 31.2357,
-        description: 'Multiple reports of suspicious activity near playground',
-        createdAt: new Date().toISOString()
-      },
-      isResolved: false
-    },
-    {
-      id: '2',
-      incident: {
-        id: '2',
-        type: 'NEGLECT',
-        location: 'Downtown Shopping Center',
-        latitude: 30.0500,
-        longitude: 31.2400,
-        description: 'Reports of individuals approaching unaccompanied minors',
-        createdAt: new Date().toISOString()
-      },
-      isResolved: false
-    },
-    {
-      id: '3',
-      incident: {
-        id: '3',
-        type: 'OTHER',
-        location: 'Riverside Elementary School',
-        latitude: 30.0480,
-        longitude: 31.2320,
-        description: 'Increased security and safety measures implemented',
-        createdAt: new Date().toISOString()
-      },
-      isResolved: true
-    }
+          allAlerts = [
+            {
+              id: '1',
+              incident: {
+                id: '1',
+                type: 'PHYSICAL_ABUSE',
+                location: 'Central Park Area',
+                latitude: 30.0444,
+                longitude: 31.2357,
+                description: 'Multiple reports of suspicious activity near playground',
+                createdAt: new Date().toISOString()
+              },
+              isResolved: false
+            },
+            {
+              id: '2',
+              incident: {
+                id: '2',
+                type: 'NEGLECT',
+                location: 'Downtown Shopping Center',
+                latitude: 30.0500,
+                longitude: 31.2400,
+                description: 'Reports of individuals approaching unaccompanied minors',
+                createdAt: new Date().toISOString()
+              },
+              isResolved: false
+            },
+            {
+              id: '3',
+              incident: {
+                id: '3',
+                type: 'OTHER',
+                location: 'Riverside Elementary School',
+                latitude: 30.0480,
+                longitude: 31.2320,
+                description: 'Increased security and safety measures implemented',
+                createdAt: new Date().toISOString()
+              },
+              isResolved: true
+            }
           ]
-          
-          setAlerts(sampleData)
         }
+        
+        // Sort alerts by date (newest first)
+        allAlerts.sort((a, b) => {
+          return new Date(b.incident.createdAt).getTime() - new Date(a.incident.createdAt).getTime();
+        });
+        
+        setAlerts(allAlerts)
+        
+        // Set initial visible alerts
+        const initialCount = Math.min(visibleCount, allAlerts.length);
+        setVisibleAlerts(allAlerts.slice(0, initialCount));
+        setHasMore(allAlerts.length > initialCount);
+        
         setLoading(false)
       } catch (error) {
         console.error('Error fetching alerts:', error)
@@ -210,12 +237,27 @@ export default function CommunityPage() {
           }
         ]
         setAlerts(fallbackData)
+        setVisibleAlerts(fallbackData)
+        setHasMore(false)
         setLoading(false)
       }
     }
     
     fetchAlerts()
   }, [])
+
+  // Add this function to load more alerts
+  const loadMoreAlerts = () => {
+    const nextCount = visibleCount + 3;
+    const newVisibleAlerts = alerts.slice(0, nextCount);
+    
+    // Add a small delay to simulate loading for better UX
+    setTimeout(() => {
+      setVisibleAlerts(newVisibleAlerts);
+      setVisibleCount(nextCount);
+      setHasMore(nextCount < alerts.length);
+    }, 500);
+  };
 
   return (
     <div className="container mx-auto space-y-8 max-w-6xl">
@@ -259,52 +301,92 @@ export default function CommunityPage() {
             </div>
           
             <div className="mt-6 space-y-4">
-              <h3 className="font-medium">{t.recentAlerts}</h3>
-              <div className="space-y-3">
-                <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border">
-                  <MapPin className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-sm font-medium">{t.centralPark}</h4>
-                      <Badge variant="destructive" className="text-xs">
-                        {t.highRisk}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {t.suspiciousActivity}
-                    </p>
-                  </div>
-                </div>
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium">{t.recentAlerts}</h3>
+                <Badge variant="outline" className="text-xs">
+                  {alerts.length} {language === 'en' ? 'reports' : 'تقارير'}
+                </Badge>
+              </div>
 
-                <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border">
-                  <MapPin className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-sm font-medium">{t.downtownShopping}</h4>
-                      <Badge variant="outline" className="text-xs border-amber-500 text-amber-500">
-                        {t.mediumRisk}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {t.approachingMinors}
-                    </p>
+              <div ref={alertsContainerRef} className="space-y-3">
+                {loading ? (
+                  <div className="flex justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
                   </div>
-                </div>
-
-                <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border">
-                  <MapPin className="h-5 w-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-sm font-medium">{t.riversideSchool}</h4>
-                      <Badge variant="outline" className="text-xs border-emerald-500 text-emerald-500">
-                        {t.safeZone}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {t.increasedSecurity}
-                    </p>
-                  </div>
-                </div>
+                ) : (
+                  <>
+                    {visibleAlerts.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground">
+                        {language === 'en' ? 'No alerts found in your area' : 'لم يتم العثور على تنبيهات في منطقتك'}
+                      </div>
+                    ) : (
+                      <>
+                        {visibleAlerts.map((alert, index) => {
+                          const incident = alert.incident;
+                          const isNew = new Date(incident.createdAt) > new Date(Date.now() - 24 * 60 * 60 * 1000);
+                          
+                          // Determine alert type and color
+                          let iconColor = 'text-red-500';
+                          let badgeVariant = 'destructive';
+                          let badgeText = t.highRisk;
+                          
+                          if (alert.isResolved) {
+                            iconColor = 'text-green-500';
+                            badgeVariant = 'outline';
+                            badgeText = language === 'en' ? 'Resolved' : 'تم الحل';
+                          } else if (incident.type === 'NEGLECT' || incident.type === 'OTHER') {
+                            iconColor = 'text-amber-500';
+                            badgeVariant = 'outline';
+                            badgeText = t.mediumRisk;
+                          }
+                          
+                          return (
+                            <div 
+                              key={alert.id} 
+                              className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border animate-fadeIn"
+                              style={{ animationDelay: `${index * 150}ms` }}
+                            >
+                              <MapPin className={`h-5 w-5 ${iconColor} flex-shrink-0 mt-0.5`} />
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h4 className="text-sm font-medium">{incident.location}</h4>
+                                  <Badge variant={badgeVariant as any} className="text-xs">
+                                    {badgeText}
+                                  </Badge>
+                                  {isNew && (
+                                    <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200 text-xs">
+                                      {language === 'en' ? 'New' : 'جديد'}
+                                    </Badge>
+                                  )}
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {incident.description}
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {new Date(incident.createdAt).toLocaleString()} - {incident.type.replace('_', ' ')}
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                        
+                        {hasMore && (
+                          <div className="flex justify-center pt-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={loadMoreAlerts}
+                              className="text-xs"
+                            >
+                              {language === 'en' ? 'Load more alerts' : 'تحميل المزيد من التنبيهات'}
+                              <ChevronDown className="h-4 w-4 ml-1" />
+                            </Button>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </>
+                )}
               </div>
             </div>
 

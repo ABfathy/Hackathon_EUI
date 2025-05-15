@@ -39,11 +39,25 @@ export async function POST(req: NextRequest) {
       location, 
       description, 
       name, 
-      contact 
+      contact,
+      latitude,
+      longitude
     } = body;
     
     // Get IP address and geolocation data
     const ipAddress = req.headers.get('x-forwarded-for') || 'Unknown';
+    
+    // Validate required fields
+    if (!type || !location || !description) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Missing required fields: type, location, or description' 
+      }, { status: 400 });
+    }
+    
+    // Parse latitude and longitude as floats
+    const parsedLatitude = latitude ? parseFloat(latitude.toString()) : null;
+    const parsedLongitude = longitude ? parseFloat(longitude.toString()) : null;
     
     // Create the incident
     const incident = await prisma.incident.create({
@@ -53,6 +67,8 @@ export async function POST(req: NextRequest) {
         description,
         name,
         contact,
+        latitude: parsedLatitude,
+        longitude: parsedLongitude,
         ipAddress,
         reporterId: session?.user?.id || null,
       },

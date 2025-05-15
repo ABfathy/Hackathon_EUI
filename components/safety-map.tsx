@@ -109,7 +109,23 @@ export default function SafetyMap({
     alerts.forEach(alert => {
       try {
         const incident = alert.incident
-        if (!incident.latitude || !incident.longitude) return
+        
+        // Check for latitude/longitude and handle different formats
+        let latitude, longitude;
+        
+        if (incident.latitude !== undefined && incident.longitude !== undefined) {
+          latitude = parseFloat(incident.latitude);
+          longitude = parseFloat(incident.longitude);
+        } else if (incident.lat !== undefined && incident.lng !== undefined) {
+          latitude = parseFloat(incident.lat);
+          longitude = parseFloat(incident.lng);
+        } else {
+          console.warn('Incident missing coordinates:', incident);
+          return;
+        }
+        
+        // Skip invalid coordinates
+        if (isNaN(latitude) || isNaN(longitude)) return;
         
         // Determine marker color based on incident type
         const markerColor = alert.isResolved 
@@ -120,7 +136,7 @@ export default function SafetyMap({
         
         // Create marker
         const marker = new window.google.maps.Marker({
-          position: { lat: incident.latitude, lng: incident.longitude },
+          position: { lat: latitude, lng: longitude },
           map: map,
           title: incident.location,
           icon: {
