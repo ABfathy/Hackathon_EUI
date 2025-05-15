@@ -175,14 +175,86 @@ export default function SupportPage() {
     try {
       setIsLoading(true)
       setError(null)
+      
+      // Define our predefined sections
+      const predefinedSections: ForumSectionType[] = [
+        {
+          id: "parents-only",
+          name: language === "en" ? "Parents Only Forum" : "منتدى الآباء فقط",
+          description: language === "en" ? "A safe space for parents to discuss child safety concerns" : "مساحة آمنة للآباء لمناقشة مخاوف سلامة الأطفال",
+          type: "PARENTS_ONLY",
+          _count: {
+            posts: 0
+          }
+        },
+        {
+          id: "teens-only",
+          name: language === "en" ? "Teens Only Forum" : "منتدى المراهقين فقط",
+          description: language === "en" ? "A supportive community for teens to share and support each other" : "مجتمع داعم للمراهقين للمشاركة ودعم بعضهم البعض",
+          type: "TEENS_ONLY",
+          _count: {
+            posts: 0
+          }
+        },
+        {
+          id: "parents-and-teens",
+          name: language === "en" ? "Parents & Teens Forum" : "منتدى الآباء والمراهقين",
+          description: language === "en" ? "Collaborative space for families to discuss safety together" : "مساحة تعاونية للعائلات لمناقشة السلامة معًا",
+          type: "BOTH",
+          _count: {
+            posts: 0
+          }
+        }
+      ];
+      
+      // Filter sections based on user type
+      const userType = session?.user?.userType;
+      console.log("User type for section filtering:", userType);
+      
+      const filteredSections = predefinedSections.filter(section => {
+        if (section.type === "BOTH") return true;
+        if (userType === "PARENT" && section.type === "PARENTS_ONLY") return true;
+        if ((userType === "CHILD" || userType === "INDEPENDENT_CHILD") && 
+            (section.type === "TEENS_ONLY" || section.type === "BOTH")) return true;
+        return false;
+      });
+      
+      setSections(filteredSections);
+      
+      // Also make an API call to get any existing posts for these sections
       const response = await fetch("/api/forum/sections")
       if (!response.ok) {
         throw new Error("Failed to fetch sections")
       }
       const data = await response.json()
-      setSections(data)
+      
+      // We're just using the API to check if there are existing posts, not to get the sections themselves
+      if (data && data.length > 0) {
+        const updatedSections = filteredSections.map(section => {
+          // Find all sections with the matching type and sum their post counts
+          const matchingSections = data.filter((s: any) => s.type === section.type);
+          if (matchingSections && matchingSections.length > 0) {
+            // Sum up the post counts from all matching sections
+            const totalPosts = matchingSections.reduce((total: number, s: any) => {
+              return total + (s._count?.posts || 0);
+            }, 0);
+            
+            console.log(`${section.name} post count: ${totalPosts}`);
+            
+            return {
+              ...section,
+              _count: {
+                posts: totalPosts
+              }
+            };
+          }
+          return section;
+        });
+        setSections(updatedSections);
+      }
+      
     } catch (error) {
-      console.error("Error fetching sections:", error)
+      console.error("Error setting up sections:", error)
       setError("Failed to load forum sections")
     } finally {
       setIsLoading(false)
@@ -193,11 +265,29 @@ export default function SupportPage() {
     try {
       setIsLoading(true)
       setError(null)
-      const response = await fetch(`/api/forum/posts?sectionId=${sectionId}`)
-      if (!response.ok) {
-        throw new Error("Failed to fetch posts")
+      
+      // Map our predefined section ID to the section type for the API
+      let sectionType = "";
+      if (sectionId === "parents-only") {
+        sectionType = "PARENTS_ONLY";
+      } else if (sectionId === "teens-only") {
+        sectionType = "TEENS_ONLY";
+      } else if (sectionId === "parents-and-teens") {
+        sectionType = "BOTH";
       }
+      
+      console.log(`Fetching posts for section: ${sectionId}, type: ${sectionType}`);
+      
+      // Always fetch by section type rather than section ID for our predefined forums
+      const response = await fetch(`/api/forum/posts?sectionType=${sectionType}`)
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Error from posts API:", errorData);
+        throw new Error(`Failed to fetch posts: ${errorData.error || response.statusText}`)
+      }
+      
       const data = await response.json()
+      console.log(`Retrieved ${data.length} posts for section type ${sectionType}`);
       setPosts(data)
     } catch (error) {
       console.error("Error fetching posts:", error)
@@ -268,11 +358,16 @@ export default function SupportPage() {
   useEffect(() => {
     if (sections.length > 0) {
       const sectionId = searchParams.get("sectionId")
+      console.log("Auto-selecting section:", sectionId);
+      
       if (sectionId) {
         const found = sections.find(s => s.id === sectionId)
         if (found) {
+          console.log("Found section:", found);
           setSelectedSection(found)
           fetchPosts(found.id)
+        } else {
+          console.log("Section not found in available sections");
         }
       }
     }
@@ -385,14 +480,7 @@ export default function SupportPage() {
         <div className="lg:col-span-2">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>{t.supportForums}</CardTitle>
-                {session?.user?.userType === "PARENT" && (
-                  <Button onClick={() => router.push('/support/create-section')}>
-                    Create New Forum
-                  </Button>
-                )}
-              </div>
+              <CardTitle>{t.supportForums}</CardTitle>
               <CardDescription>
                 {t.chatroomsDescription}
               </CardDescription>
@@ -405,10 +493,16 @@ export default function SupportPage() {
                     <div className="flex gap-2">
                       <Button variant="outline" onClick={() => setSelectedSection(null)}>{t.backToSections}</Button>
                       <Button onClick={() => {
-                        if (typeof window !== 'undefined') {
-                          localStorage.setItem('lastCreateSectionId', selectedSection.id)
+                        // Map section ID to type
+                        let sectionType = "";
+                        if (selectedSection.id === "parents-only") {
+                          sectionType = "PARENTS_ONLY";
+                        } else if (selectedSection.id === "teens-only") {
+                          sectionType = "TEENS_ONLY";
+                        } else if (selectedSection.id === "parents-and-teens") {
+                          sectionType = "BOTH";
                         }
-                        router.push(`/support/create-post?sectionId=${selectedSection.id}`)
+                        router.push(`/support/create-post?sectionType=${sectionType}`)
                       }}>
                         {t.createNewPost}
                       </Button>

@@ -404,7 +404,7 @@ export default function ReportingPage() {
     return t.step1Description; // Default for parents
   };
 
-  if (status === "loading" || loading) {
+  if (status === "loading" || loading === true) {
     return (
       <div className="container mx-auto space-y-8 max-w-6xl">
         <div className="flex flex-col space-y-2">
