@@ -122,8 +122,48 @@ enum IncidentType {
   OTHER
 }
 
+model ForumSection {
+  id          String      @id @default(cuid())
+  name        String
+  description String
+  type        SectionType
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  posts       ForumPost[]
+}
+
+model ForumPost {
+  id          String      @id @default(cuid())
+  title       String
+  content     String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  author      User        @relation(fields: [authorId], references: [id])
+  authorId    String
+  section     ForumSection @relation(fields: [sectionId], references: [id])
+  sectionId   String
+  replies     ForumReply[]
+}
+
+model ForumReply {
+  id        String    @id @default(cuid())
+  content   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  author    User      @relation(fields: [authorId], references: [id])
+  authorId  String
+  post      ForumPost @relation(fields: [postId], references: [id])
+  postId    String
+}
+
 enum UserType {
   PARENT
   CHILD
   INDEPENDENT_CHILD
+}
+
+enum SectionType {
+  PARENTS_ONLY
+  TEENS_ONLY
+  BOTH
 }

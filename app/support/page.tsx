@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -11,6 +12,46 @@ import { MessageCircle, Lock, Users, Send, Wind, Info, Video, Search, BookOpen }
 import { useLanguage } from "@/context/language-context"
 import { useSession } from "next-auth/react"
 import Link from "next/link"
+import { ForumSection } from "@/components/forum/forum-section"
+import { ForumPost } from "@/components/forum/forum-post"
+import { ForumReply } from "@/components/forum/forum-reply"
+import { useRouter, usePathname, useSearchParams } from "next/navigation"
+
+interface ForumSectionType {
+  id: string
+  name: string
+  description: string
+  type: "PARENTS_ONLY" | "TEENS_ONLY" | "BOTH"
+  _count: {
+    posts: number
+  }
+}
+
+interface ForumPostType {
+  id: string
+  title: string
+  content: string
+  createdAt: string
+  author: {
+    id: string
+    name: string
+    userType: string
+  }
+  _count: {
+    replies: number
+  }
+}
+
+interface ForumReplyType {
+  id: string
+  content: string
+  createdAt: string
+  author: {
+    id: string
+    name: string
+    userType: string
+  }
+}
 
 const translations = {
   en: {
@@ -48,7 +89,18 @@ const translations = {
     available: "Available",
     specializedIn: "Specialized in child trauma and recovery",
     specializations: "Specializations:",
-    traumaRecovery: "Trauma Recovery"
+    traumaRecovery: "Trauma Recovery",
+    createNewPost: "Create New Post",
+    newPostTitle: "New Post Title",
+    newPostContent: "Write your post content here...",
+    submitPost: "Submit Post",
+    replyToPost: "Reply to Post",
+    writeReply: "Write your reply here...",
+    submitReply: "Submit Reply",
+    backToSections: "Back to Sections",
+    backToPosts: "Back to Posts",
+    postedBy: "Posted by",
+    posts: "posts"
   },
   ar: {
     title: "منتدى الدعم",
@@ -85,7 +137,18 @@ const translations = {
     available: "متاح",
     specializedIn: "متخصص في صدمات الأطفال والتعافي",
     specializations: "التخصصات:",
-    traumaRecovery: "التعافي من الصدمات"
+    traumaRecovery: "التعافي من الصدمات",
+    createNewPost: "إنشاء منشور جديد",
+    newPostTitle: "عنوان المنشور الجديد",
+    newPostContent: "اكتب محتوى منشورك هنا...",
+    submitPost: "نشر المنشور",
+    replyToPost: "الرد على المنشور",
+    writeReply: "اكتب ردك هنا...",
+    submitReply: "إرسال الرد",
+    backToSections: "العودة إلى الأقسام",
+    backToPosts: "العودة إلى المنشورات",
+    postedBy: "نشر بواسطة",
+    posts: "منشورات"
   }
 }
 
@@ -93,10 +156,150 @@ export default function SupportPage() {
   const { language } = useLanguage()
   const t = translations[language]
   const { data: session, status } = useSession()
-  
-  if (status === "loading") {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const [sections, setSections] = useState<ForumSectionType[]>([])
+  const [selectedSection, setSelectedSection] = useState<ForumSectionType | null>(null)
+  const [posts, setPosts] = useState<ForumPostType[]>([])
+  const [selectedPost, setSelectedPost] = useState<ForumPostType | null>(null)
+  const [replies, setReplies] = useState<ForumReplyType[]>([])
+  const [newPostTitle, setNewPostTitle] = useState("")
+  const [newPostContent, setNewPostContent] = useState("")
+  const [newReplyContent, setNewReplyContent] = useState("")
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      fetchSections()
+    }
+  }, [status])
+
+  // Auto-select section if sectionId is in query
+  useEffect(() => {
+    if (sections.length > 0) {
+      const sectionId = searchParams.get("sectionId")
+      if (sectionId) {
+        const found = sections.find(s => s.id === sectionId)
+        if (found) {
+          setSelectedSection(found)
+          fetchPosts(found.id)
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sections, searchParams])
+
+  const fetchSections = async () => {
+    try {
+      setIsLoading(true)
+      setError(null)
+      const response = await fetch("/api/forum/sections")
+      if (!response.ok) {
+        throw new Error("Failed to fetch sections")
+      }
+      const data = await response.json()
+      setSections(data)
+    } catch (error) {
+      console.error("Error fetching sections:", error)
+      setError("Failed to load forum sections")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const fetchPosts = async (sectionId: string) => {
+    try {
+      setIsLoading(true)
+      setError(null)
+      const response = await fetch(`/api/forum/posts?sectionId=${sectionId}`)
+      if (!response.ok) {
+        throw new Error("Failed to fetch posts")
+      }
+      const data = await response.json()
+      setPosts(data)
+    } catch (error) {
+      console.error("Error fetching posts:", error)
+      setError("Failed to load posts")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const fetchReplies = async (postId: string) => {
+    try {
+      setIsLoading(true)
+      setError(null)
+      const response = await fetch(`/api/forum/replies?postId=${postId}`)
+      if (!response.ok) {
+        throw new Error("Failed to fetch replies")
+      }
+      const data = await response.json()
+      setReplies(data)
+    } catch (error) {
+      console.error("Error fetching replies:", error)
+      setError("Failed to load replies")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleCreatePost = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedSection || !newPostTitle || !newPostContent) return
+
+    try {
+      const response = await fetch("/api/forum/posts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: newPostTitle,
+          content: newPostContent,
+          sectionId: selectedSection.id,
+        }),
+      })
+
+      if (response.ok) {
+        setNewPostTitle("")
+        setNewPostContent("")
+        fetchPosts(selectedSection.id)
+      }
+    } catch (error) {
+      console.error("Error creating post:", error)
+    }
+  }
+
+  const handleCreateReply = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedPost || !newReplyContent) return
+
+    try {
+      const response = await fetch("/api/forum/replies", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          content: newReplyContent,
+          postId: selectedPost.id,
+        }),
+      })
+
+      if (response.ok) {
+        setNewReplyContent("")
+        fetchReplies(selectedPost.id)
+      }
+    } catch (error) {
+      console.error("Error creating reply:", error)
+    }
+  }
+
+  if (status === "loading" || isLoading) {
     return (
-      <div className="space-y-8">
+      <div className="container mx-auto space-y-8 max-w-6xl">
         <div className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">{t.title}</h1>
           <div className="flex items-center space-x-2 mt-4">
@@ -110,7 +313,7 @@ export default function SupportPage() {
   
   if (status === "unauthenticated" || !session) {
     return (
-      <div className="space-y-8">
+      <div className="container mx-auto space-y-8 max-w-6xl">
         <div className="space-y-4">
           <h1 className="text-3xl font-bold tracking-tight">{t.title}</h1>
           <p className="text-muted-foreground">{t.subtitle}</p>
@@ -137,6 +340,46 @@ export default function SupportPage() {
     )
   }
 
+  if (selectedPost) {
+    return (
+      <div className="container mx-auto space-y-8 max-w-3xl">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <Button variant="outline" onClick={() => setSelectedPost(null)}>
+                {t.backToPosts}
+              </Button>
+              <CardTitle>{selectedPost.title}</CardTitle>
+            </div>
+            <CardDescription>
+              {t.postedBy} {selectedPost.author.name} • {new Date(selectedPost.createdAt).toLocaleDateString()}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="prose dark:prose-invert max-w-none">
+              <p>{selectedPost.content}</p>
+            </div>
+            <Separator />
+            <div className="space-y-4">
+              {replies.map((reply) => (
+                <ForumReply key={reply.id} {...reply} />
+              ))}
+            </div>
+            <form onSubmit={handleCreateReply} className="space-y-4">
+              <textarea
+                className="w-full min-h-[100px] p-2 border rounded-md"
+                placeholder={t.writeReply}
+                value={newReplyContent}
+                onChange={(e) => setNewReplyContent(e.target.value)}
+              />
+              <Button type="submit">{t.submitReply}</Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="container mx-auto space-y-8 max-w-6xl">
       <div className="flex flex-col space-y-2">
@@ -148,501 +391,104 @@ export default function SupportPage() {
         </p>
       </div>
 
-      <Card className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
-        <CardContent className="p-6 flex flex-col md:flex-row items-center gap-6">
-          <div className="bg-white dark:bg-gray-800 p-4 rounded-full">
-            <Lock className="h-10 w-10 text-blue-600" />
-          </div>
-          <div className="flex-1 space-y-2 text-center md:text-left">
-            <h3 className="text-xl font-semibold">{t.privacyTitle}</h3>
-            <p className="text-muted-foreground">
-              {t.privacyDescription}
-            </p>
-          </div>
-          <Button variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
-            {t.privacyPolicy}
-          </Button>
-        </CardContent>
-      </Card>
+      {error && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+          <p className="text-red-600 dark:text-red-400">{error}</p>
+        </div>
+      )}
 
-      <Tabs defaultValue="forums" className="w-full">
-        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 mb-4">
-          <TabsTrigger value="forums">{t.supportForums}</TabsTrigger>
-          <TabsTrigger value="counseling">{t.expertCounseling}</TabsTrigger>
-          <TabsTrigger value="resources">{t.supportResources}</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="forums" className="space-y-6 pt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle>{t.confidentialChatrooms}</CardTitle>
-                  <CardDescription>
-                    {t.chatroomsDescription}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="border rounded-md">
-                    <div className="p-4 border-b bg-muted/50">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Users className="h-5 w-5 text-muted-foreground" />
-                          <h3 className="font-medium">{t.parentsSupportGroup}</h3>
-                          <Badge className="ml-2">{t.active}</Badge>
-                        </div>
-                        <Badge variant="outline" className="text-xs">
-                          24 {t.membersOnline}
-                        </Badge>
-                      </div>
-                    </div>
-
-                    <div className="p-4 space-y-4 max-h-[400px] overflow-y-auto">
-                      <div className="flex gap-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback>JD</AvatarFallback>
-                        </Avatar>
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium">Jane Doe</span>
-                            <span className="text-xs text-muted-foreground">2:45 PM</span>
-                          </div>
-                          <p className="text-sm bg-muted p-2 rounded-md">
-                            I'm concerned about my child's behavior after they started a new school. Has anyone dealt
-                            with similar issues?
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback>MS</AvatarFallback>
-                        </Avatar>
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium">Mark Smith</span>
-                            <Badge variant="outline" className="text-xs">
-                              Moderator
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">2:50 PM</span>
-                          </div>
-                          <p className="text-sm bg-muted p-2 rounded-md">
-                            Hi Jane, many parents face similar challenges. Could you share more about the specific
-                            behaviors you're noticing?
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback>SJ</AvatarFallback>
-                        </Avatar>
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium">Sarah Johnson</span>
-                            <span className="text-xs text-muted-foreground">3:01 PM</span>
-                          </div>
-                          <p className="text-sm bg-muted p-2 rounded-md">
-                            My son went through something similar last year. What helped us was maintaining open
-                            communication and working with the school counselor.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="p-4 border-t">
-                      <div className="flex gap-2">
-                        <Input placeholder={t.typeMessage} className="flex-1" />
-                        <Button size="icon">
-                          <Send className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        {t.messagesConfidential}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="flex flex-col sm:flex-row gap-2 sm:justify-between mt-4">
-                  <Button variant="outline" className="w-full sm:w-auto">{t.viewOtherForums}</Button>
-                  <Button className="w-full sm:w-auto">{t.joinDiscussion}</Button>
-                </CardFooter>
-              </Card>
-            </div>
-
-            <div>
-              <Card>
-                <CardHeader>
-                  <CardTitle>{t.availableForums}</CardTitle>
-                  <CardDescription>{t.joinGroups}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 bg-emerald-50 dark:bg-emerald-950 rounded-lg border border-emerald-200 dark:border-emerald-800">
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-emerald-600" />
-                        <span className="font-medium">{t.parentsSupportGroup}</span>
-                      </div>
-                      <Badge>{t.active}</Badge>
-                    </div>
-
-                    <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-blue-600" />
-                        <span className="font-medium">{t.teens}</span>
-                      </div>
-                      <Badge>{t.active}</Badge>
-                    </div>
-
-                    <div className="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-950 rounded-lg border border-purple-200 dark:border-purple-800">
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-purple-600" />
-                        <span className="font-medium">{t.children}</span>
-                      </div>
-                      <Badge>{t.active}</Badge>
-                    </div>
-
-                    <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border">
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">{t.educators}</span>
-                      </div>
-                      <Badge variant="outline">{t.comingSoon}</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button className="w-full">{t.createAccount}</Button>
-                </CardFooter>
-              </Card>
-
-              <Card className="mt-6">
-                <CardHeader>
-                  <CardTitle>{t.forumGuidelines}</CardTitle>
-                  <CardDescription>{t.guidelinesDescription}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex items-start gap-2">
-                      <Wind className="h-4 w-4 text-emerald-600 mt-0.5" />
-                      <span>End-to-end encryption</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <Wind className="h-4 w-4 text-emerald-600 mt-0.5" />
-                      <span>Secure data storage</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <Wind className="h-4 w-4 text-emerald-600 mt-0.5" />
-                      <span>Privacy protection</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <Wind className="h-4 w-4 text-emerald-600 mt-0.5" />
-                      <span>Safe environment</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="counseling" className="space-y-6 pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card>
-              <CardHeader className="space-y-1">
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-lg">{t.childPsychologist}</CardTitle>
-                  <Badge className="bg-green-500">{t.available}</Badge>
-                </div>
-                <CardDescription>{t.specializedIn}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <Avatar className="h-16 w-16">
-                    <AvatarFallback>DR</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <h4 className="font-medium">Dr. Rebecca Chen</h4>
-                    <p className="text-sm text-muted-foreground">PhD, Child Psychology</p>
-                    <div className="flex items-center gap-1 mt-1">
-                      <span className="text-yellow-500">★★★★★</span>
-                      <span className="text-xs text-muted-foreground">(48 reviews)</span>
-                    </div>
-                  </div>
-                </div>
-                <Separator />
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium">{t.specializations}:</h4>
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="outline" className="text-xs">
-                      {t.traumaRecovery}
-                    </Badge>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="flex flex-col sm:flex-row gap-2">
-                <Button variant="outline" className="w-full">
-                  View Profile
-                </Button>
-                <Button className="w-full">Schedule Session</Button>
-              </CardFooter>
-            </Card>
-
-            <Card>
-              <CardHeader className="space-y-1">
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-lg">Family Therapist</CardTitle>
-                  <Badge className="bg-green-500">Available</Badge>
-                </div>
-                <CardDescription>Focused on family dynamics and healing</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <Avatar className="h-16 w-16">
-                    <AvatarFallback>JM</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <h4 className="font-medium">Dr. James Miller</h4>
-                    <p className="text-sm text-muted-foreground">LMFT, Family Therapy</p>
-                    <div className="flex items-center gap-1 mt-1">
-                      <span className="text-yellow-500">★★★★☆</span>
-                      <span className="text-xs text-muted-foreground">(36 reviews)</span>
-                    </div>
-                  </div>
-                </div>
-                <Separator />
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium">Specializations:</h4>
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="outline" className="text-xs">
-                      Family Dynamics
-                    </Badge>
-                    <Badge variant="outline" className="text-xs">
-                      Parenting
-                    </Badge>
-                    <Badge variant="outline" className="text-xs">
-                      Communication
-                    </Badge>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="flex flex-col sm:flex-row gap-2">
-                <Button variant="outline" className="w-full">
-                  View Profile
-                </Button>
-                <Button className="w-full">Schedule Session</Button>
-              </CardFooter>
-            </Card>
-
-            <Card>
-              <CardHeader className="space-y-1">
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-lg">Child Advocate</CardTitle>
-                  <Badge className="bg-amber-500">Busy</Badge>
-                </div>
-                <CardDescription>Legal and emotional support for children</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <Avatar className="h-16 w-16">
-                    <AvatarFallback>SA</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <h4 className="font-medium">Sarah Adams</h4>
-                    <p className="text-sm text-muted-foreground">JD, Child Advocacy</p>
-                    <div className="flex items-center gap-1 mt-1">
-                      <span className="text-yellow-500">★★★★★</span>
-                      <span className="text-xs text-muted-foreground">(52 reviews)</span>
-                    </div>
-                  </div>
-                </div>
-                <Separator />
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium">Specializations:</h4>
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="outline" className="text-xs">
-                      Legal Support
-                    </Badge>
-                    <Badge variant="outline" className="text-xs">
-                      Advocacy
-                    </Badge>
-                    <Badge variant="outline" className="text-xs">
-                      System Navigation
-                    </Badge>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="flex flex-col sm:flex-row gap-2">
-                <Button variant="outline" className="w-full">
-                  View Profile
-                </Button>
-                <Button className="w-full">Join Waitlist</Button>
-              </CardFooter>
-            </Card>
-          </div>
-
-          <Card className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
-            <CardContent className="p-6 flex flex-col md:flex-row items-center gap-6">
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-full">
-                <MessageCircle className="h-10 w-10 text-blue-600" />
-              </div>
-              <div className="flex-1 space-y-2 text-center md:text-left">
-                <h3 className="text-xl font-semibold">Emergency Support Available 24/7</h3>
-                <p className="text-muted-foreground">
-                  Our crisis counselors are available around the clock for urgent situations.
-                </p>
-              </div>
-              <Button className="bg-red-600 hover:bg-red-700 text-white w-full md:w-auto">Access Emergency Support</Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="resources" className="space-y-6 pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Support Resources</CardTitle>
-                <CardDescription>Helpful materials for families and children</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border">
-                    <Info className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <h4 className="text-sm font-medium">Coping Strategies for Children</h4>
-                      <p className="text-xs text-muted-foreground">PDF guide with age-appropriate coping mechanisms</p>
-                      <Button variant="link" className="h-auto p-0 text-xs text-blue-600">
-                        Download PDF
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border">
-                    <Info className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <h4 className="text-sm font-medium">Talking to Children About Abuse</h4>
-                      <p className="text-xs text-muted-foreground">
-                        Guide for parents on having difficult conversations
-                      </p>
-                      <Button variant="link" className="h-auto p-0 text-xs text-blue-600">
-                        Download PDF
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border">
-                    <Info className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <h4 className="text-sm font-medium">Recovery Journey Workbook</h4>
-                      <p className="text-xs text-muted-foreground">Interactive workbook for healing and recovery</p>
-                      <Button variant="link" className="h-auto p-0 text-xs text-blue-600">
-                        Download PDF
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border">
-                    <Info className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <h4 className="text-sm font-medium">Legal Rights Guide</h4>
-                      <p className="text-xs text-muted-foreground">Understanding the legal process and your rights</p>
-                      <Button variant="link" className="h-auto p-0 text-xs text-blue-600">
-                        Download PDF
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button variant="outline" className="w-full">
-                  View All Resources
-                </Button>
-              </CardFooter>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Support Videos</CardTitle>
-                <CardDescription>Educational videos on healing and recovery</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="aspect-video bg-gray-100 dark:bg-gray-800 rounded-md flex items-center justify-center">
-                  <Video className="h-10 w-10 text-muted-foreground" />
-                </div>
-                <h4 className="font-medium">Understanding Trauma in Children</h4>
-                <p className="text-sm text-muted-foreground">
-                  This video explains how trauma affects children's development and behavior, and provides strategies
-                  for support.
-                </p>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
-                    Previous
-                  </Button>
-                  <Button variant="outline" size="sm" className="ml-auto">
-                    Next
-                  </Button>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button className="w-full">View Video Library</Button>
-              </CardFooter>
-            </Card>
-          </div>
-
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle>Local Support Services</CardTitle>
-              <CardDescription>Find support services in your area</CardDescription>
+              <CardTitle>{t.supportForums}</CardTitle>
+              <CardDescription>
+                {t.chatroomsDescription}
+              </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center space-x-4">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input type="search" placeholder="Enter your location..." className="pl-8" />
+            <CardContent className="space-y-6">
+              {selectedSection ? (
+                <>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold">{selectedSection.name}</h3>
+                    <div className="flex gap-2">
+                      <Button variant="outline" onClick={() => setSelectedSection(null)}>{t.backToSections}</Button>
+                      <Button onClick={() => {
+                        if (typeof window !== 'undefined') {
+                          localStorage.setItem('lastCreateSectionId', selectedSection.id)
+                        }
+                        router.push(`/support/create-post?sectionId=${selectedSection.id}`)
+                      }}>
+                        {t.createNewPost}
+                      </Button>
+                    </div>
                   </div>
-                  <Button>Find Services</Button>
+                  <div className="space-y-4">
+                    {posts.map((post) => (
+                      <ForumPost
+                        key={post.id}
+                        {...post}
+                        onClick={() => {
+                          setSelectedPost(post)
+                          fetchReplies(post.id)
+                        }}
+                      />
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {sections.map((section) => (
+                    <ForumSection
+                      key={section.id}
+                      {...section}
+                      onClick={() => {
+                        setSelectedSection(section)
+                        fetchPosts(section.id)
+                      }}
+                    />
+                  ))}
                 </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <Card>
-                    <CardContent className="p-4">
-                      <h4 className="font-medium">Children's Crisis Center</h4>
-                      <p className="text-sm text-muted-foreground">123 Main St, Anytown</p>
-                      <p className="text-sm">Phone: (555) 123-4567</p>
-                      <Badge variant="outline" className="mt-2">
-                        Crisis Support
-                      </Badge>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="p-4">
-                      <h4 className="font-medium">Family Support Network</h4>
-                      <p className="text-sm text-muted-foreground">456 Oak Ave, Anytown</p>
-                      <p className="text-sm">Phone: (555) 987-6543</p>
-                      <Badge variant="outline" className="mt-2">
-                        Family Services
-                      </Badge>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="p-4">
-                      <h4 className="font-medium">Child Advocacy Center</h4>
-                      <p className="text-sm text-muted-foreground">789 Pine St, Anytown</p>
-                      <p className="text-sm">Phone: (555) 456-7890</p>
-                      <Badge variant="outline" className="mt-2">
-                        Legal Support
-                      </Badge>
-                    </CardContent>
-                  </Card>
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t.forumGuidelines}</CardTitle>
+              <CardDescription>{t.guidelinesDescription}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="bg-purple-100 dark:bg-gray-800 p-2 rounded-full">
+                  <Info className="h-4 w-4 text-purple-600" />
                 </div>
+                <p className="text-sm">{t.respectPrivacy}</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="bg-purple-100 dark:bg-gray-800 p-2 rounded-full">
+                  <Info className="h-4 w-4 text-purple-600" />
+                </div>
+                <p className="text-sm">{t.beSupportive}</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="bg-purple-100 dark:bg-gray-800 p-2 rounded-full">
+                  <Info className="h-4 w-4 text-purple-600" />
+                </div>
+                <p className="text-sm">{t.reportContent}</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="bg-purple-100 dark:bg-gray-800 p-2 rounded-full">
+                  <Info className="h-4 w-4 text-purple-600" />
+                </div>
+                <p className="text-sm">{t.noPersonalInfo}</p>
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
     </div>
   )
 }
