@@ -153,8 +153,7 @@ export default function RegisterPage() {
         router.push("/login?registered=true")
       }, 2000)
     } catch (error) {
-      console.error("Registration error:", error);
-      
+      // Handle error silently without logging to console
       const errorMessage = error instanceof Error ? error.message : "Registration failed";
       
       // Set the error message in state if it's a "User already exists" error

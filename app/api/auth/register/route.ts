@@ -37,7 +37,6 @@ export async function POST(request: Request) {
     // Check if user already exists
     const existingUser = await getUserByEmail(email)
     if (existingUser) {
-      console.log("User already exists:", email);
       return NextResponse.json(
         { error: "User already exists" },
         { status: 400 }
@@ -128,8 +127,6 @@ export async function POST(request: Request) {
       parentPhone: userType === "CHILD" ? parentPhone : null,
     };
 
-    console.log("REGISTER API: About to call createUser with payload:", JSON.stringify(createUserPayload, null, 2));
-
     const user = await createUser(createUserPayload)
 
     return NextResponse.json({
@@ -143,16 +140,12 @@ export async function POST(request: Request) {
       }
     })
   } catch (error) {
-    console.error("Registration error:", error)
-    
-    // Get a meaningful error message
+    // Handle error silently
     let errorMessage = "Internal server error";
     
     if (error instanceof Error) {
-      // Send the actual error message for better client-side debugging
       errorMessage = error.message;
       
-      // Handle specific error cases
       if (error.message.includes("Unique constraint failed")) {
         errorMessage = "An account with this email already exists";
         return NextResponse.json({ error: errorMessage }, { status: 409 });
