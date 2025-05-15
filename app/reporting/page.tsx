@@ -292,7 +292,33 @@ export default function ReportingPage() {
       const data = await response.json()
       
       if (data.success && data.alerts) {
-        setAlerts(data.alerts)
+        // Sort alerts by proximity to user if location is available
+        if (userLocation.latitude && userLocation.longitude) {
+          const sortedAlerts = [...data.alerts].sort((a, b) => {
+            // Calculate distance from user to alert a
+            const distA = calculateDistance(
+              userLocation.latitude as number, 
+              userLocation.longitude as number,
+              a.incident.latitude, 
+              a.incident.longitude
+            );
+            
+            // Calculate distance from user to alert b
+            const distB = calculateDistance(
+              userLocation.latitude as number, 
+              userLocation.longitude as number,
+              b.incident.latitude, 
+              b.incident.longitude
+            );
+            
+            // Sort by distance (closest first)
+            return distA - distB;
+          });
+          
+          setAlerts(sortedAlerts);
+        } else {
+          setAlerts(data.alerts);
+        }
       } else {
         console.error('Failed to fetch alerts:', data.error)
         // Set empty array if there's an error
@@ -305,6 +331,20 @@ export default function ReportingPage() {
     } finally {
       setLoadingAlerts(false)
     }
+  }
+  
+  // Calculate distance between two points using Haversine formula
+  function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 6371; // Radius of the Earth in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2); 
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+    const distance = R * c; // Distance in km
+    return distance;
   }
   
   // Function to handle changing the alert radius

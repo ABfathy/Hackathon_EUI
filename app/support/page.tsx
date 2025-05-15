@@ -351,7 +351,7 @@ export default function SupportPage() {
     if (status === "authenticated") {
       fetchSections()
     }
-  }, [status])
+  }, [status, language])
 
   // Auto-select section if sectionId is in query
   useEffect(() => {
@@ -371,7 +371,7 @@ export default function SupportPage() {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sections, searchParams])
+  }, [sections, searchParams, language])
 
   // Show loading state when checking authentication
   if (status === "loading") {
