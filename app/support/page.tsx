@@ -213,9 +213,8 @@ export default function SupportPage() {
       
       const filteredSections = predefinedSections.filter(section => {
         if (section.type === "BOTH") return true;
-        if (userType === "PARENT" && section.type === "PARENTS_ONLY") return true;
-        if ((userType === "CHILD" || userType === "INDEPENDENT_CHILD") && 
-            (section.type === "TEENS_ONLY" || section.type === "BOTH")) return true;
+        if (section.type === "PARENTS_ONLY" && userType === "PARENT") return true;
+        if (section.type === "TEENS_ONLY" && (userType === "CHILD" || userType === "INDEPENDENT_CHILD")) return true;
         return false;
       });
       
