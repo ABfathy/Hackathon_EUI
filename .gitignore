@@ -26,3 +26,4 @@ lib/generated/
 
 openai-env-template.txt
 lib/openai/run-ai.sh
+package-lock.json
