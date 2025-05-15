@@ -3,204 +3,219 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { BookOpen, Play, Award, Volume2, Wind, Users, Baby, School, GraduationCap, Gamepad2, ArrowLeft, XIcon } from "lucide-react"
+import { BookOpen, Play, Award, Volume2, Wind, Users, Baby, School, GraduationCap, Gamepad2, ArrowLeft, XIcon, Video, FileText, ExternalLink } from "lucide-react"
 import { useLanguage } from "@/context/language-context"
 import { useParams, useRouter } from "next/navigation"
 import { ReactElement, useState } from "react"
+import dynamic from 'next/dynamic'
+import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import Link from "next/link"
+import type { FC } from 'react'
 
-type Language = "en" | "ar";
+const QuizGame = dynamic(() => import('../../components/QuizGame'), {
+  loading: () => <div>Loading quiz...</div>
+})
+
+type Language = "en" | "ar"
 type AgeGroup = "4-7" | "8-12" | "13-17"
+type ActivityType = "video" | "game" | "document" | "link" | "lesson" | "activity"
 
 interface Activity {
+  id: string
   title: string
   description: string
-  icon: ReactElement
-  progress: number
-  type: "game" | "story" | "activity" | "lesson" | "video"
+  type: ActivityType
   videoUrl?: string
+  documentUrl?: string
+  externalUrl?: string
+  tags: string[]
 }
 
 interface AgeGroupContent {
   title: string
   description: string
   activities: Activity[]
+  back: string
 }
 
-type Translations = {
-  [L in Language]: {
-    back: string;
-  } & {
-    [A in AgeGroup]: AgeGroupContent;
-  };
-};
+interface Translations {
+  [key: string]: {
+    [key: string]: AgeGroupContent
+  }
+}
 
 const translations: Translations = {
   en: {
-    back: "Back to Resources",
     "4-7": {
-      title: "Ages 4-7",
-      description: "Fun and interactive learning activities for young children",
+      title: "Resources for Ages 4-7",
+      description: "Fun and engaging activities for young children",
+      back: "Back to Resources",
       activities: [
         {
-          title: "My Body Belongs to Me",
-          description: "Learn about body safety through fun games",
-          icon: <Baby className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
-          progress: 0,
-          type: "game"
-        },
-        {
-          title: "Safe and Unsafe Touch",
-          description: "Watch a video about personal boundaries and safe touch.",
-          icon: <Play className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
-          progress: 0,
+          id: "1",
+          title: "Body Safety Rules",
+          description: "Learn about personal boundaries and safety",
           type: "video",
-          videoUrl: "https://www.youtube.com/embed/5Bu2JBDG_Gk"
+          videoUrl: "https://example.com/video1",
+          tags: ["safety", "boundaries"]
         },
         {
-          title: "Feelings and Emotions",
-          description: "Learn to express your feelings safely",
-          icon: <Users className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
-          progress: 0,
-          type: "activity"
+          id: "2",
+          title: "Safe Touch Game",
+          description: "Interactive game about safe and unsafe touches",
+          type: "game",
+          tags: ["safety", "interactive"]
+        },
+        {
+          id: "3",
+          title: "Feelings Activity",
+          description: "Express and understand different emotions",
+          type: "activity",
+          tags: ["emotions", "interactive"]
         }
       ]
     },
     "8-12": {
-      title: "Ages 8-12",
-      description: "Engaging activities for school-aged children",
+      title: "Resources for Ages 8-12",
+      description: "Interactive learning materials for pre-teens",
+      back: "Back to Resources",
       activities: [
         {
-          title: "Digital Safety Adventure",
-          description: "Learn about online safety through an interactive game",
-          icon: <Gamepad2 className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
-          progress: 0,
-          type: "game"
+          id: "4",
+          title: "Online Safety",
+          description: "Learn about staying safe on the internet",
+          type: "lesson",
+          tags: ["online safety", "digital literacy"]
         },
         {
-          title: "Building Healthy Friendships",
-          description: "Interactive lessons about peer relationships",
-          icon: <Users className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
-          progress: 0,
-          type: "lesson"
+          id: "5",
+          title: "Cyber Safety Game",
+          description: "Test your knowledge about online safety",
+          type: "game",
+          tags: ["online safety", "interactive"]
         },
         {
-          title: "Speaking Up",
-          description: "Learn how to express concerns safely",
-          icon: <Wind className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
-          progress: 0,
-          type: "activity"
+          id: "6",
+          title: "Digital Footprint",
+          description: "Understanding your online presence",
+          type: "activity",
+          tags: ["online safety", "digital literacy"]
         }
       ]
     },
     "13-17": {
-      title: "Ages 13-17",
-      description: "Resources for teenagers",
+      title: "Resources for Ages 13-17",
+      description: "Comprehensive resources for teenagers",
+      back: "Back to Resources",
       activities: [
         {
-          title: "Online Safety Challenge",
-          description: "Interactive scenarios about digital safety",
-          icon: <Gamepad2 className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
-          progress: 0,
-          type: "game"
-        },
-        {
+          id: "7",
           title: "Healthy Relationships",
-          description: "Learn about building positive relationships",
-          icon: <Users className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
-          progress: 0,
-          type: "lesson"
+          description: "Understanding healthy boundaries and relationships",
+          type: "lesson",
+          tags: ["relationships", "boundaries"]
         },
         {
-          title: "Future Planning",
-          description: "Set goals and plan for your future",
-          icon: <GraduationCap className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
-          progress: 0,
-          type: "activity"
+          id: "8",
+          title: "Consent Quiz",
+          description: "Test your understanding of consent",
+          type: "game",
+          tags: ["consent", "interactive"]
+        },
+        {
+          id: "9",
+          title: "Peer Pressure",
+          description: "Handling peer pressure and making good decisions",
+          type: "activity",
+          tags: ["peer pressure", "decision making"]
         }
       ]
     }
   },
   ar: {
-    back: "العودة إلى الموارد",
     "4-7": {
-      title: "الأعمار 4-7",
-      description: "أنشطة تعليمية ممتعة وتفاعلية للأطفال الصغار",
+      title: "موارد للأعمار 4-7",
+      description: "أنشطة ممتعة وجذابة للأطفال الصغار",
+      back: "العودة إلى الموارد",
       activities: [
         {
-          title: "جسدي ملك لي",
-          description: "تعلم عن سلامة الجسد من خلال ألعاب ممتعة",
-          icon: <Baby className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
-          progress: 0,
-          type: "game"
-        },
-        {
-          title: "اللمس الآمن وغير الآمن",
-          description: "شاهد فيديو عن الحدود الشخصية واللمس الآمن.",
-          icon: <Play className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
-          progress: 0,
+          id: "1",
+          title: "قواعد سلامة الجسد",
+          description: "تعلم عن الحدود الشخصية والسلامة",
           type: "video",
-          videoUrl: "https://www.youtube.com/embed/5Bu2JBDG_Gk"
+          videoUrl: "https://example.com/video1",
+          tags: ["سلامة", "حدود"]
         },
         {
-          title: "المشاعر والعواطف",
-          description: "تعلم التعبير عن مشاعرك بأمان",
-          icon: <Users className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
-          progress: 0,
-          type: "activity"
+          id: "2",
+          title: "لعبة اللمس الآمن",
+          description: "لعبة تفاعلية عن اللمس الآمن وغير الآمن",
+          type: "game",
+          tags: ["سلامة", "تفاعلي"]
+        },
+        {
+          id: "3",
+          title: "نشاط المشاعر",
+          description: "التعبير عن المشاعر المختلفة وفهمها",
+          type: "activity",
+          tags: ["مشاعر", "تفاعلي"]
         }
       ]
     },
     "8-12": {
-      title: "الأعمار 8-12",
-      description: "أنشطة جذابة للأطفال في سن المدرسة",
+      title: "موارد للأعمار 8-12",
+      description: "مواد تعليمية تفاعلية للمراهقين",
+      back: "العودة إلى الموارد",
       activities: [
         {
-          title: "مغامرة السلامة الرقمية",
-          description: "تعلم عن السلامة عبر الإنترنت من خلال لعبة تفاعلية",
-          icon: <Gamepad2 className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
-          progress: 0,
-          type: "game"
+          id: "4",
+          title: "السلامة على الإنترنت",
+          description: "تعلم عن البقاء آمناً على الإنترنت",
+          type: "lesson",
+          tags: ["سلامة الإنترنت", "محو الأمية الرقمية"]
         },
         {
-          title: "بناء الصداقات الصحية",
-          description: "دروس تفاعلية عن علاقات الأقران",
-          icon: <Users className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
-          progress: 0,
-          type: "lesson"
+          id: "5",
+          title: "لعبة السلامة الإلكترونية",
+          description: "اختبر معرفتك عن السلامة على الإنترنت",
+          type: "game",
+          tags: ["سلامة الإنترنت", "تفاعلي"]
         },
         {
-          title: "التعبير عن النفس",
-          description: "تعلم كيفية التعبير عن المخاوف بأمان",
-          icon: <Wind className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
-          progress: 0,
-          type: "activity"
+          id: "6",
+          title: "البصمة الرقمية",
+          description: "فهم وجودك على الإنترنت",
+          type: "activity",
+          tags: ["سلامة الإنترنت", "محو الأمية الرقمية"]
         }
       ]
     },
     "13-17": {
-      title: "الأعمار 13-17",
-      description: "موارد للمراهقين",
+      title: "موارد للأعمار 13-17",
+      description: "موارد شاملة للمراهقين",
+      back: "العودة إلى الموارد",
       activities: [
         {
-          title: "تحدي السلامة عبر الإنترنت",
-          description: "سيناريوهات تفاعلية عن السلامة الرقمية",
-          icon: <Gamepad2 className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
-          progress: 0,
-          type: "game"
-        },
-        {
+          id: "7",
           title: "العلاقات الصحية",
-          description: "تعلم بناء العلاقات الإيجابية",
-          icon: <Users className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
-          progress: 0,
-          type: "lesson"
+          description: "فهم الحدود والعلاقات الصحية",
+          type: "lesson",
+          tags: ["علاقات", "حدود"]
         },
         {
-          title: "التخطيط للمستقبل",
-          description: "حدد الأهداف وخطط لمستقبلك",
-          icon: <GraduationCap className="h-10 w-10 text-purple-600 dark:text-gray-300" />,
-          progress: 0,
-          type: "activity"
+          id: "8",
+          title: "اختبار الموافقة",
+          description: "اختبر فهمك للموافقة",
+          type: "game",
+          tags: ["موافقة", "تفاعلي"]
+        },
+        {
+          id: "9",
+          title: "ضغط الأقران",
+          description: "التعامل مع ضغط الأقران واتخاذ قرارات جيدة",
+          type: "activity",
+          tags: ["ضغط الأقران", "اتخاذ القرارات"]
         }
       ]
     }
@@ -208,66 +223,110 @@ const translations: Translations = {
 }
 
 export default function ChildrenAgeGroupPage() {
+  const { age } = useParams()
   const { language } = useLanguage()
-  const params = useParams()
-  const router = useRouter()
-  const ageGroup = params.age as AgeGroup
-  const t = translations[language][ageGroup]
-  const [videoUrlToPlay, setVideoUrlToPlay] = useState<string | null>(null);
+  const t = translations[language][age as AgeGroup]
+  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null)
+  const [showQuiz, setShowQuiz] = useState(false)
+  const [quizScore, setQuizScore] = useState<number | null>(null)
+  const [videoUrlToPlay, setVideoUrlToPlay] = useState<string | null>(null)
 
-  return (
-    <div className="space-y-8">
-      <div className="flex items-center gap-4">
+  const handleActivityClick = (activity: Activity) => {
+    if (activity.type === 'game') {
+      setShowQuiz(true)
+    } else if (activity.type === 'video' && activity.videoUrl) {
+      setVideoUrlToPlay(activity.videoUrl)
+    } else {
+      setSelectedActivity(activity)
+    }
+  }
+
+  const handleQuizComplete = (score: number) => {
+    setQuizScore(score)
+  }
+
+  const handleCloseQuiz = () => {
+    setShowQuiz(false)
+    setQuizScore(null)
+  }
+
+  if (showQuiz) {
+    return (
+      <div className="container mx-auto px-4 py-8">
         <Button
           variant="ghost"
-          className="gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
-          onClick={() => router.back()}
+          className="mb-6"
+          onClick={handleCloseQuiz}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          {t.back}
+        </Button>
+        <QuizGame
+          ageGroup={age as AgeGroup}
+          onComplete={handleQuizComplete}
+          onClose={handleCloseQuiz}
+        />
+      </div>
+    )
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8">
+        <Button
+          variant="ghost"
+          className="mb-4"
+          onClick={() => window.history.back()}
         >
           <ArrowLeft className="h-4 w-4" />
-          {translations[language].back}
+          {t.back}
         </Button>
-      </div>
-
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">{t.title}</h1>
-        <p className="text-muted-foreground">{t.description}</p>
+        <h1 className="text-3xl font-bold mb-2">{t.title}</h1>
+        <p className="text-gray-600 dark:text-gray-300">{t.description}</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {t.activities.map((activity: Activity, index: number) => (
-          <Card key={index} className="overflow-hidden border-purple-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-gray-600 transition-colors">
-            <CardHeader className="p-6 text-center">
-              <div className="bg-purple-100 dark:bg-gray-800/50 p-2 rounded-full w-fit mx-auto">
-                {activity.icon}
-              </div>
-              <CardTitle className="mt-4 text-gray-900 dark:text-gray-100">{activity.title}</CardTitle>
-              <CardDescription className="dark:text-gray-400">{activity.description}</CardDescription>
+        {t.activities.map((activity) => (
+          <Card key={activity.id} className="overflow-hidden">
+            <CardHeader>
+              <CardTitle>{activity.title}</CardTitle>
+              <CardDescription>{activity.description}</CardDescription>
             </CardHeader>
-            <CardContent className="p-6 pt-0">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground dark:text-gray-400">Progress</span>
-                  <span className="font-medium text-gray-900 dark:text-gray-100">{activity.progress}%</span>
-                </div>
-                <Progress value={activity.progress} className="h-2 bg-gray-100 dark:bg-gray-800" />
+            <CardContent>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {activity.tags.map((tag) => (
+                  <Badge key={tag} variant="secondary">
+                    {tag}
+                  </Badge>
+                ))}
               </div>
             </CardContent>
-            <CardFooter className="p-6 pt-0">
-              <Button 
+            <CardFooter>
+              <Button
                 className="w-full bg-purple-600 hover:bg-purple-700 dark:bg-purple-600/80 dark:hover:bg-purple-600 text-white"
-                onClick={() => {
-                  if (activity.type === "video" && activity.videoUrl) {
-                    setVideoUrlToPlay(activity.videoUrl);
-                  } else {
-                    console.log("Button clicked for activity:", activity.title, "Type:", activity.type);
-                  }
-                }}
+                onClick={() => handleActivityClick(activity)}
               >
-                {activity.type === "video"
-                  ? (language === "en" ? "Watch Video" : "مشاهدة الفيديو")
-                  : activity.progress === 0 
-                    ? (language === "en" ? `Start ${activity.type.charAt(0).toUpperCase() + activity.type.slice(1)}` : `ابدأ ال${activity.type === "game" ? "لعبة" : activity.type === "story" ? "قصة" : "نشاط"}`) 
-                    : (language === "en" ? "Continue" : "متابعة")}
+                {activity.type === "video" ? (
+                  <>
+                    <Video className="mr-2 h-4 w-4" />
+                    {language === "en" ? "Watch Video" : "شاهد الفيديو"}
+                  </>
+                ) : activity.type === "game" ? (
+                  <>
+                    <Gamepad2 className="mr-2 h-4 w-4" />
+                    {language === "en" ? "Play Game" : "العب اللعبة"}
+                  </>
+                ) : activity.type === "document" ? (
+                  <>
+                    <FileText className="mr-2 h-4 w-4" />
+                    {language === "en" ? "Read Document" : "اقرأ المستند"}
+                  </>
+                ) : (
+                  <>
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    {language === "en" ? "Open Link" : "افتح الرابط"}
+                  </>
+                )}
               </Button>
             </CardFooter>
           </Card>
@@ -275,27 +334,21 @@ export default function ChildrenAgeGroupPage() {
       </div>
 
       {videoUrlToPlay && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
-          <div style={{ backgroundColor: 'white', padding: '10px', borderRadius: '8px', position: 'relative', width: '80vw', maxWidth: '80vw' }}>
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="relative w-full max-w-4xl aspect-video">
             <Button
               variant="ghost"
-              size="icon"
+              className="absolute -top-12 right-0 text-white"
               onClick={() => setVideoUrlToPlay(null)}
-              style={{ position: 'absolute', top: '10px', right: '10px', color: '#333', background: '#fff', borderRadius:'50%', width: '32px', height: '32px' }}
-              aria-label={language === "en" ? "Close video player" : "إغلاق مشغل الفيديو"}
             >
-              <XIcon className="h-5 w-5" />
+              Close
             </Button>
-            <div style={{ aspectRatio: '16/9', width: '100%' }}>
-              <iframe 
-                style={{ width: '100%', height: '100%' }}
-                src={videoUrlToPlay} 
-                title="YouTube video player" 
-                frameBorder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                allowFullScreen>
-              </iframe>
-            </div>
+            <iframe
+              src={videoUrlToPlay}
+              className="w-full h-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
           </div>
         </div>
       )}
