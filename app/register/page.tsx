@@ -38,7 +38,10 @@ const translations = {
     required: "This field is required",
     invalidDate: "Invalid date format (YYYY-MM-DD)",
     childRequirements: "Child registration requires parent information",
-    independentChild: "Independent Child"
+    independentChild: "Independent Child",
+    userExists: "An account with this email already exists. Please try logging in or use a different email.",
+    registrationFailed: "Registration failed. Please try again.",
+    parentAccountNotFound: "The parent email you provided is not registered as a parent account. Please ensure the parent registers first."
   },
   ar: {
     title: "إنشاء حساب",
@@ -65,7 +68,10 @@ const translations = {
     required: "هذا الحقل مطلوب",
     invalidDate: "صيغة التاريخ غير صالحة (YYYY-MM-DD)",
     childRequirements: "تسجيل الطفل يتطلب معلومات الوالد",
-    independentChild: "طفل مستقل"
+    independentChild: "طفل مستقل",
+    userExists: "هذا البريد الإلكتروني مسجل بالفعل. يرجى تسجيل الدخول أو استخدام بريد إلكتروني آخر.",
+    registrationFailed: "فشل التسجيل. يرجى المحاولة مرة أخرى.",
+    parentAccountNotFound: "البريد الإلكتروني للوالد غير مسجل كحساب والد. يرجى التأكد من تسجيل الوالد أولاً."
   }
 }
 
@@ -75,6 +81,7 @@ export default function RegisterPage() {
   const { toast } = useToast()
   const t = translations[language]
   const [isLoading, setIsLoading] = useState(false)
+  const [emailError, setEmailError] = useState("")
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -90,6 +97,7 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setEmailError("") // Clear any previous errors
 
     // Validate form
     if (formData.password !== formData.confirmPassword) {
@@ -120,18 +128,10 @@ export default function RegisterPage() {
         })
       })
 
-      let data;
-      try {
-        data = await response.json();
-      } catch (jsonError) {
-        // Handle JSON parsing errors
-        throw new Error("Failed to parse registration response");
-      }
+      const data = await response.json();
 
       if (!response.ok) {
-        // Safe access of data.error to prevent undefined errors
-        const errorMessage = data && data.error ? data.error : "Registration failed";
-        throw new Error(errorMessage);
+        throw new Error(data.error || "Registration failed");
       }
 
       // Show success message with family code if it's a parent account
@@ -153,31 +153,21 @@ export default function RegisterPage() {
         router.push("/login?registered=true")
       }, 2000)
     } catch (error) {
-      console.error("Registration error details:", error);
+      console.error("Registration error:", error);
       
-      // Default error message
-      let errorDescription = "Registration failed. Please try again.";
+      const errorMessage = error instanceof Error ? error.message : "Registration failed";
       
-      // Extract more specific error message if available
-      if (error instanceof Error) {
-        errorDescription = error.message;
-        
-        // Provide clearer guidance for specific error cases
-        if (error.message.includes("Parent account")) {
-          errorDescription = "The parent email you provided is not registered as a parent account. Please ensure the parent registers first.";
-        } else if (error.message.includes("already exists") || error.message.includes("already taken")) {
-          errorDescription = "An account with this email already exists. Please try logging in or use a different email.";
-        } else if (error.message.includes("invalid") && error.message.includes("email")) {
-          errorDescription = "Please enter a valid email address.";
-        }
+      // Set the error message in state if it's a "User already exists" error
+      if (errorMessage === "User already exists") {
+        setEmailError(t.userExists);
+      } else {
+        toast({
+          title: t.error,
+          description: errorMessage,
+          variant: "destructive",
+          duration: 6000
+        })
       }
-      
-      toast({
-        title: t.error,
-        description: errorDescription,
-        variant: "destructive",
-        duration: 6000
-      })
     } finally {
       setIsLoading(false)
     }
@@ -235,7 +225,11 @@ export default function RegisterPage() {
                 value={formData.email}
                 onChange={handleChange}
                 required
+                className={emailError ? "border-red-500" : ""}
               />
+              {emailError && (
+                <p className="text-sm text-red-500 mt-1">{emailError}</p>
+              )}
             </div>
 
             <div className="space-y-2">
