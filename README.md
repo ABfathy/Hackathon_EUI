@@ -41,9 +41,6 @@ This application is built with Next.js, TypeScript, Tailwind CSS, and uses Postg
 
 6. **Access the Platform**
    - Open your browser and visit: `http://localhost:3000`
-   - Demo credentials:
-     - Parent account: `parent@example.com` / `password123`
-     - Child account: `child@example.com` / `password123`
 
 ### Key Features to Evaluate
 
